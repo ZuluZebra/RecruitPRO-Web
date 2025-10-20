@@ -911,11 +911,12 @@ const loadMoreCandidates = async () => {
                     projects={projects}
                     onClose={() => setShowAddModal(false)}
                     onAdd={(candidateData) => {
-                        const newCandidates = [candidateData, ...candidates];
-                        setCandidates(newCandidates);
-                        helpers.storage.save('recruitpro_candidates', newCandidates);
-                        setShowAddModal(false);
-                    }}
+    const candidateWithAttribution = window.addUserAttribution(candidateData);
+    const newCandidates = [candidateWithAttribution, ...candidates];
+    setCandidates(newCandidates);
+    helpers.storage.save('recruitpro_candidates', newCandidates);
+    setShowAddModal(false);
+}}
                 />
             )}
         </div>

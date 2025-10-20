@@ -1,0 +1,40 @@
+{
+  "name": "recruitpro",
+  "version": "2.0.0",
+  "description": "Professional Recruitment Management System with Local File Sync",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js",
+    "build": "echo 'No build step required - static files served from public/'",
+    "vercel-build": "echo 'Vercel build complete'"
+  },
+  "keywords": [
+    "recruitment",
+    "crm", 
+    "hr",
+    "hiring",
+    "candidate-management",
+    "progressive-web-app"
+  ],
+  "author": "Chris van der Merwe",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "your-github-repo-url"
+  },
+  "bugs": {
+    "url": "your-github-repo-url/issues"
+  },
+  "homepage": "your-domain.com"
+}

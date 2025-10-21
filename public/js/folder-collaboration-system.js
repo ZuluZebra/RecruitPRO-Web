@@ -207,6 +207,7 @@ class FolderCollaborationManager {
             });
 
             console.log('📁 Selected folder:', this.currentFolder.name);
+            this.saveFolderInfo();
             
             // Analyze the folder to understand what type it is
             const folderAnalysis = await this.analyzeFolderContents();

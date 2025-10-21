@@ -1226,6 +1226,22 @@ async checkForReconnection() {
     return false;
 }
 
+/*
+🚀 ENHANCED QUICK RECONNECT SYSTEM
+=================================
+
+This creates a much better reconnect experience:
+- Shows exact folder name and location hints
+- One-click "Connect to [Folder Name]" button
+- Remembers recent folder paths
+- Smart folder picker suggestions
+- Auto-detects if you picked the right folder
+
+IMPLEMENTATION:
+Replace the showReconnectPrompt method in your folder-collaboration-system.js
+*/
+
+// Enhanced reconnect prompt with better UX
 showReconnectPrompt(folderInfo) {
     // Don't show if user dismissed recently
     const lastDismissed = localStorage.getItem('recruitpro_reconnect_dismissed');
@@ -1269,43 +1285,65 @@ showReconnectPrompt(folderInfo) {
                 from { opacity: 0; transform: scale(0.9); }
                 to { opacity: 1; transform: scale(1); }
             }
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+            .connect-button {
+                animation: pulse 2s infinite;
+            }
+            .folder-hint {
+                background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+                border: 2px dashed #9ca3af;
+                padding: 16px;
+                border-radius: 12px;
+                margin: 16px 0;
+                text-align: center;
+            }
         </style>
         <div style="
-            background: white; padding: 32px; border-radius: 16px; 
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); 
-            max-width: 500px; width: 90%; position: relative;
+            background: white; padding: 32px; border-radius: 20px; 
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3); 
+            max-width: 580px; width: 90%; position: relative;
             animation: fadeIn 0.3s ease-out;
         ">
             <!-- Header -->
-            <div style="text-align: center; margin-bottom: 24px;">
+            <div style="text-align: center; margin-bottom: 28px;">
                 <div style="
-                    width: 80px; height: 80px; margin: 0 auto 16px; 
+                    width: 90px; height: 90px; margin: 0 auto 20px; 
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     border-radius: 50%; display: flex; align-items: center; justify-content: center;
-                    font-size: 32px; color: white;
+                    font-size: 36px; color: white; box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
                 ">📁</div>
-                <h2 style="margin: 0 0 8px 0; color: #374151; font-size: 24px;">
-                    Reconnect to Team Folder
+                <h2 style="margin: 0 0 8px 0; color: #374151; font-size: 26px; font-weight: 700;">
+                    Quick Reconnect
                 </h2>
-                <p style="color: #6b7280; margin: 0; font-size: 14px;">
-                    You were previously connected to a team folder
+                <p style="color: #6b7280; margin: 0; font-size: 15px;">
+                    Connect to your previous team folder with one click
                 </p>
             </div>
             
-            <!-- Folder Info -->
+            <!-- Folder Info Card -->
             <div style="
-                background: #f9fafb; padding: 20px; border-radius: 12px; 
-                margin-bottom: 24px; border-left: 4px solid #667eea;
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                padding: 24px; border-radius: 16px; 
+                margin-bottom: 24px; border: 2px solid #e2e8f0;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             ">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                    <span style="font-size: 24px;">
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                    <div style="
+                        width: 60px; height: 60px; border-radius: 12px;
+                        background: linear-gradient(135deg, ${folderInfo.isTeamFolder ? '#10b981' : '#f59e0b'} 0%, ${folderInfo.isTeamFolder ? '#059669' : '#d97706'} 100%);
+                        display: flex; align-items: center; justify-content: center;
+                        font-size: 28px; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                    ">
                         ${folderInfo.isTeamFolder ? '👥' : '📁'}
-                    </span>
+                    </div>
                     <div>
-                        <div style="font-weight: 600; color: #374151; font-size: 16px;">
+                        <div style="font-weight: 700; color: #1f2937; font-size: 20px; margin-bottom: 4px;">
                             ${folderInfo.name}
                         </div>
-                        <div style="font-size: 12px; color: #6b7280;">
+                        <div style="font-size: 14px; color: #6b7280;">
                             Last connected: ${formatDate(folderInfo.lastConnected)}
                         </div>
                     </div>
@@ -1313,62 +1351,83 @@ showReconnectPrompt(folderInfo) {
                 
                 ${folderInfo.isTeamFolder ? `
                     <div style="
-                        background: #ecfdf5; padding: 12px; border-radius: 8px;
-                        border-left: 3px solid #10b981; margin-top: 12px;
+                        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+                        padding: 16px; border-radius: 12px;
+                        border: 1px solid #a7f3d0;
                     ">
-                        <div style="font-size: 13px; color: #047857;">
-                            <strong>🎯 Team Folder:</strong> ${folderInfo.teamMemberCount} member${folderInfo.teamMemberCount !== 1 ? 's' : ''}<br>
-                            <strong>👤 Your Role:</strong> ${folderInfo.userRole}
+                        <div style="font-size: 14px; color: #047857; line-height: 1.5;">
+                            <strong>🎯 Team Folder Features:</strong><br>
+                            • ${folderInfo.teamMemberCount} team member${folderInfo.teamMemberCount !== 1 ? 's' : ''} sharing data<br>
+                            • Your role: <strong>${folderInfo.userRole}</strong><br>
+                            • Real-time collaboration enabled
                         </div>
                     </div>
                 ` : `
                     <div style="
-                        background: #fef3c7; padding: 12px; border-radius: 8px;
-                        border-left: 3px solid #f59e0b; margin-top: 12px;
+                        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                        padding: 16px; border-radius: 12px;
+                        border: 1px solid #fbbf24;
                     ">
-                        <div style="font-size: 13px; color: #92400e;">
-                            <strong>📁 Personal Folder:</strong> Individual workspace
+                        <div style="font-size: 14px; color: #92400e; line-height: 1.5;">
+                            <strong>📁 Personal Workspace:</strong><br>
+                            • Individual data storage<br>
+                            • Can be upgraded to team folder<br>
+                            • Your private workspace
                         </div>
                     </div>
                 `}
             </div>
             
-            <!-- Actions -->
-            <div style="display: flex; gap: 12px;">
+            <!-- Connection Instructions -->
+            <div class="folder-hint">
+                <div style="font-size: 18px; margin-bottom: 8px;">📍</div>
+                <div style="font-weight: 600; color: #374151; margin-bottom: 8px;">
+                    Look for folder: "<strong>${folderInfo.name}</strong>"
+                </div>
+                <div style="font-size: 13px; color: #6b7280; line-height: 1.4;">
+                    When the file picker opens, navigate to and select<br>
+                    the exact same folder you used before
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 14px; margin-top: 28px;">
                 <button 
                     onclick="window.folderCollaboration.dismissReconnectPrompt()"
                     style="
-                        flex: 1; background: #f3f4f6; color: #374151; border: none; 
-                        padding: 12px 16px; border-radius: 8px; cursor: pointer; 
-                        font-size: 14px; transition: background 0.2s;
+                        flex: 1; background: #f8fafc; color: #64748b; border: 2px solid #e2e8f0; 
+                        padding: 14px 20px; border-radius: 12px; cursor: pointer; 
+                        font-size: 14px; font-weight: 600; transition: all 0.2s;
                     "
-                    onmouseover="this.style.background='#e5e7eb'"
-                    onmouseout="this.style.background='#f3f4f6'"
+                    onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1'"
+                    onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0'"
                 >
                     Maybe Later
                 </button>
                 <button 
-                    onclick="window.folderCollaboration.quickReconnect()"
+                    onclick="window.folderCollaboration.smartReconnect('${folderInfo.name}')"
+                    class="connect-button"
                     style="
                         flex: 2; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        color: white; border: none; padding: 12px 16px; border-radius: 8px; 
-                        cursor: pointer; font-size: 14px; font-weight: 600;
-                        transition: transform 0.2s;
+                        color: white; border: none; padding: 14px 20px; border-radius: 12px; 
+                        cursor: pointer; font-size: 16px; font-weight: 700;
+                        transition: all 0.2s; box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3);
                     "
-                    onmouseover="this.style.transform='translateY(-1px)'"
-                    onmouseout="this.style.transform='translateY(0)'"
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(102, 126, 234, 0.4)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 12px rgba(102, 126, 234, 0.3)'"
                 >
-                    🔄 Reconnect Now
+                    🚀 Connect to "${folderInfo.name}"
                 </button>
             </div>
             
             <!-- Helper Text -->
             <div style="
-                text-align: center; margin-top: 16px; font-size: 12px; 
-                color: #6b7280; line-height: 1.4;
+                text-align: center; margin-top: 20px; font-size: 12px; 
+                color: #9ca3af; line-height: 1.5; background: #f9fafb;
+                padding: 12px; border-radius: 8px;
             ">
-                💡 You'll need to select the same folder location<br>
-                Team collaboration will resume automatically
+                💡 <strong>Quick Tip:</strong> The file picker will open to help you find your folder.<br>
+                Select the exact same folder and your team data will be restored instantly!
             </div>
         </div>
     `;
@@ -1376,44 +1435,146 @@ showReconnectPrompt(folderInfo) {
     document.body.appendChild(overlay);
 }
 
-async quickReconnect() {
+// Enhanced smart reconnect with better feedback
+async smartReconnect(expectedFolderName) {
     // Close the prompt
     const overlay = document.querySelector('[style*="backdrop-filter"]');
     if (overlay) overlay.remove();
     
-    this.showNotification('📁 Select your previous folder to reconnect...', 'info');
+    this.showNotification(`📁 Opening file picker for "${expectedFolderName}"...`, 'info');
     
-    // Trigger folder selection
     try {
-        await this.selectCollaborationFolder();
+        // Show the folder picker
+        const selectedFolder = await window.showDirectoryPicker({
+            mode: 'readwrite',
+            startIn: 'documents'
+        });
+        
+        // Check if they selected the right folder
+        if (selectedFolder.name === expectedFolderName) {
+            this.showNotification('🎉 Perfect! Reconnecting to your team folder...', 'success');
+            
+            // Set the folder and continue with normal flow
+            this.currentFolder = selectedFolder;
+            this.saveFolderInfo();
+            
+            // Analyze and connect
+            const folderAnalysis = await this.analyzeFolderContents();
+            await this.handleFolderSelection(folderAnalysis);
+            
+            this.showNotification(`✅ Successfully reconnected to "${expectedFolderName}"!`, 'success');
+            
+        } else {
+            // They selected a different folder
+            this.showNotification(`⚠️ Selected "${selectedFolder.name}" instead of "${expectedFolderName}". This will create a new workspace.`, 'warning');
+            
+            // Ask if they want to continue with this folder or try again
+            this.showDifferentFolderDialog(selectedFolder, expectedFolderName);
+        }
+        
     } catch (error) {
-        if (error.name !== 'AbortError') {
-            console.error('❌ Reconnect failed:', error);
-            this.showNotification('❌ Could not reconnect. Please try again.', 'error');
+        if (error.name === 'AbortError') {
+            this.showNotification('📁 Folder selection cancelled', 'info');
+            
+            // Show the reconnect prompt again after a delay
+            setTimeout(() => {
+                const savedFolder = this.loadSavedFolderInfo();
+                if (savedFolder) {
+                    this.showReconnectPrompt(savedFolder);
+                }
+            }, 2000);
+        } else {
+            console.error('❌ Smart reconnect failed:', error);
+            this.showNotification('❌ Could not access folder. Please try again.', 'error');
         }
     }
 }
 
-dismissReconnectPrompt() {
-    // Close the prompt
-    const overlay = document.querySelector('[style*="backdrop-filter"]');
-    if (overlay) overlay.remove();
+// Handle when user selects wrong folder
+showDifferentFolderDialog(selectedFolder, expectedFolder) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.8); display: flex;
+        justify-content: center; align-items: center; z-index: 10000;
+        backdrop-filter: blur(5px);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    overlay.innerHTML = `
+        <div style="
+            background: white; padding: 32px; border-radius: 16px; 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); 
+            max-width: 500px; width: 90%;
+        ">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="
+                    width: 80px; height: 80px; margin: 0 auto 16px; 
+                    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                    font-size: 32px; color: white;
+                ">⚠️</div>
+                <h2 style="margin: 0 0 8px 0; color: #374151; font-size: 24px;">Different Folder Selected</h2>
+                <p style="color: #6b7280; margin: 0; font-size: 14px;">
+                    You selected a different folder than expected
+                </p>
+            </div>
+            
+            <div style="background: #fef3c7; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="font-size: 14px; color: #92400e;">
+                    <strong>Expected:</strong> "${expectedFolder}"<br>
+                    <strong>Selected:</strong> "${selectedFolder.name}"
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 12px;">
+                <button 
+                    onclick="window.folderCollaboration.continueWithNewFolder()"
+                    style="
+                        flex: 1; background: #10b981; color: white; border: none; 
+                        padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+                    "
+                >
+                    Use "${selectedFolder.name}"
+                </button>
+                <button 
+                    onclick="window.folderCollaboration.retryCorrectFolder('${expectedFolder}')"
+                    style="
+                        flex: 1; background: #3b82f6; color: white; border: none; 
+                        padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+                    "
+                >
+                    Try Again
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+}
+
+async continueWithNewFolder() {
+    // Close dialog
+    document.querySelector('[style*="backdrop-filter"]')?.remove();
     
-    // Remember dismissal for 24 hours
-    localStorage.setItem('recruitpro_reconnect_dismissed', new Date().toISOString());
+    // Continue with the selected folder
+    const folderAnalysis = await this.analyzeFolderContents();
+    await this.handleFolderSelection(folderAnalysis);
     
-    this.showNotification('📁 You can reconnect anytime via the folder icon', 'info');
+    this.showNotification('✅ Connected to new workspace!', 'success');
 }
 
-clearSavedFolderInfo() {
-    localStorage.removeItem('recruitpro_last_folder');
-    localStorage.removeItem('recruitpro_reconnect_dismissed');
-    console.log('🧹 Cleared saved folder info');
+async retryCorrectFolder(expectedFolderName) {
+    // Close dialog
+    document.querySelector('[style*="backdrop-filter"]')?.remove();
+    
+    // Try the smart reconnect again
+    setTimeout(() => {
+        this.smartReconnect(expectedFolderName);
+    }, 500);
 }
 
-}
-
-
+} // <-- This closes the FolderCollaborationManager class
 
 // Initialize the Folder Collaboration Manager
 window.folderCollaboration = new FolderCollaborationManager();

@@ -302,11 +302,11 @@ const InterviewsComponent = ({
             
             // FIXED: Update candidates state with proper ID matching
             const newCandidates = candidates.map(c => 
-                (c.id == candidateId || c.id == numericCandidateId) 
-                    ? { ...c, ...candidateUpdates }
-                    : c
-            );
-            setCandidates(newCandidates);
+    (c.id == candidateId || c.id == numericCandidateId)
+        ? window.updateUserAttribution({ ...c, ...candidateUpdates })
+        : c
+);
+setCandidates(newCandidates);
             
             console.log('✅ Candidates updated in state');
             console.log('Updated candidate feedback length:', updatedFeedback.length);

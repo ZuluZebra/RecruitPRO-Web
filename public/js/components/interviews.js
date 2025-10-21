@@ -332,11 +332,12 @@ setCandidates(newCandidates);
             console.log('=== FEEDBACK SUBMISSION COMPLETED ===');
             
             // FIXED: Force component re-render by updating a timestamp
-            setCandidates(prev => prev.map(c => 
-                (c.id == candidateId || c.id == numericCandidateId)
-                    ? { ...c, _lastUpdate: Date.now() }
-                    : c
-            ));
+            // FIXED: Force component re-render with attribution
+setCandidates(prev => prev.map(c => 
+    (c.id == candidateId || c.id == numericCandidateId)
+        ? window.updateUserAttribution({ ...c, _lastUpdate: Date.now() })
+        : c
+));
             
         } catch (error) {
             console.error('❌ ERROR submitting feedback:', error);

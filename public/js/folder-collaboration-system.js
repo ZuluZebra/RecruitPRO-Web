@@ -1105,7 +1105,7 @@ showInviteMemberDialog() {
             
             <div style="display: flex; gap: 12px;">
                 <button 
-                    onclick="this.closest('[style*=\"position: fixed\"]').remove()"
+                    onclick="document.querySelector('[style*=\"backdrop-filter\"]').remove()"
                     style="
                         flex: 1; background: #f3f4f6; color: #374151; border: none; 
                         padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px;

@@ -671,11 +671,11 @@ const attachLinkedInPDF = async (candidateId, pdfFile, currentUser, setCandidate
                 const newCandidates = [...prevCandidates];
                 const candidate = newCandidates[candidateIndex];
                 
-                newCandidates[candidateIndex] = {
-                    ...candidate,
-                    attached_pdfs: [...(candidate.attached_pdfs || []), pdfData],
-                    _lastUpdate: Date.now()
-                };
+                newCandidates[candidateIndex] = window.updateUserAttribution({
+    ...candidate,
+    attached_pdfs: [...(candidate.attached_pdfs || []), pdfData],
+    _lastUpdate: Date.now()
+});
                 
                 // Force storage update (same as interview feedback)
                 helpers.storage.save('recruitpro_candidates', newCandidates);

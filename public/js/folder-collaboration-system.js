@@ -769,10 +769,417 @@ class FolderCollaborationManager {
         console.log('👤 Show user profile');
     }
 
-    showTeamManagement() {
-        // Implement team management interface
-        console.log('👥 Show team management');
+    /*
+👥 COMPLETE TEAM MANAGEMENT SYSTEM
+================================
+
+This implements full team management with:
+- View all team members
+- Change member roles
+- Remove team members 
+- Add new members
+- Role-based permissions
+
+IMPLEMENTATION:
+Replace the showTeamManagement() function in folder-collaboration-system.js
+*/
+
+// Replace the existing showTeamManagement function with this complete implementation:
+
+showTeamManagement() {
+    if (!this.isTeamFolder || !this.teamMembers) {
+        this.showNotification('❌ No team folder connected', 'error');
+        return;
     }
+
+    const currentUser = this.teamMembers.find(m => m.id === this.currentUser.id);
+    const isAdmin = currentUser?.role === 'admin' || currentUser?.isCreator;
+
+    this.showTeamManagementDialog(isAdmin);
+}
+
+showTeamManagementDialog(isAdmin) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.8); display: flex;
+        justify-content: center; align-items: center; z-index: 10000;
+        backdrop-filter: blur(5px);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    // Generate member list HTML
+    const membersList = this.teamMembers.map(member => {
+        const isCurrentUser = member.id === this.currentUser.id;
+        const canEdit = isAdmin && !isCurrentUser;
+        
+        return `
+            <div style="
+                display: flex; align-items: center; justify-content: space-between; 
+                padding: 16px; background: #f9fafb; border-radius: 8px; margin-bottom: 12px;
+                border: ${isCurrentUser ? '2px solid #3b82f6' : '1px solid #e5e7eb'};
+            ">
+                <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                    <div style="
+                        width: 48px; height: 48px; border-radius: 50%; 
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        display: flex; align-items: center; justify-content: center;
+                        color: white; font-weight: bold; font-size: 18px;
+                    ">
+                        ${this.getRoleIcon(member.role)}
+                    </div>
+                    
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 2px;">
+                            ${member.name} ${isCurrentUser ? '(You)' : ''}
+                            ${member.isCreator ? ' 👑' : ''}
+                        </div>
+                        <div style="font-size: 12px; color: #6b7280;">
+                            ${member.email || 'No email'} • Joined ${this.formatDate(member.joinedAt)}
+                        </div>
+                        <div style="
+                            display: inline-block; padding: 2px 8px; background: ${this.getRoleColor(member.role)}; 
+                            color: white; font-size: 11px; font-weight: 600; border-radius: 4px; 
+                            text-transform: uppercase; margin-top: 4px;
+                        ">
+                            ${member.role}
+                        </div>
+                    </div>
+                </div>
+                
+                ${canEdit ? `
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <select 
+                            onchange="window.folderCollaboration.changeMemberRole('${member.id}', this.value)"
+                            style="
+                                padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px;
+                                background: white; font-size: 12px; cursor: pointer;
+                            "
+                        >
+                            <option value="${member.role}" selected>${member.role}</option>
+                            ${member.role !== 'admin' ? '<option value="admin">admin</option>' : ''}
+                            ${member.role !== 'manager' ? '<option value="manager">manager</option>' : ''}
+                            ${member.role !== 'recruiter' ? '<option value="recruiter">recruiter</option>' : ''}
+                            ${member.role !== 'viewer' ? '<option value="viewer">viewer</option>' : ''}
+                        </select>
+                        
+                        <button 
+                            onclick="window.folderCollaboration.removeMember('${member.id}', '${member.name}')"
+                            style="
+                                background: #dc2626; color: white; border: none; 
+                                padding: 6px 10px; border-radius: 6px; cursor: pointer;
+                                font-size: 12px; font-weight: 600;
+                            "
+                            title="Remove member"
+                        >
+                            🗑️
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+
+    overlay.innerHTML = `
+        <div style="
+            background: white; border-radius: 16px; 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); 
+            max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto;
+        ">
+            <!-- Header -->
+            <div style="
+                padding: 24px 32px; border-bottom: 1px solid #e5e7eb;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 16px 16px 0 0; color: white;
+            ">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 style="margin: 0 0 4px 0; font-size: 24px; font-weight: 700;">
+                            👥 Team Management
+                        </h2>
+                        <p style="margin: 0; opacity: 0.9; font-size: 14px;">
+                            ${this.currentFolder.name} • ${this.teamMembers.length} member${this.teamMembers.length !== 1 ? 's' : ''}
+                        </p>
+                    </div>
+                    <button 
+                        onclick="this.closest('[style*=\"position: fixed\"]').remove()"
+                        style="
+                            background: rgba(255,255,255,0.2); border: none; color: white;
+                            width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+                            display: flex; align-items: center; justify-content: center;
+                            font-size: 18px;
+                        "
+                    >
+                        ×
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            <div style="padding: 24px 32px;">
+                <!-- Permissions Notice -->
+                ${!isAdmin ? `
+                    <div style="
+                        background: #fef3c7; padding: 12px 16px; border-radius: 8px; 
+                        margin-bottom: 20px; border-left: 4px solid #f59e0b;
+                    ">
+                        <p style="margin: 0; font-size: 13px; color: #92400e;">
+                            ⚠️ <strong>View Only:</strong> You don't have admin permissions to modify team members.
+                        </p>
+                    </div>
+                ` : ''}
+                
+                <!-- Team Members List -->
+                <div style="margin-bottom: 24px;">
+                    <h3 style="margin: 0 0 16px 0; color: #374151; font-size: 18px;">Team Members</h3>
+                    ${membersList}
+                </div>
+                
+                <!-- Admin Actions -->
+                ${isAdmin ? `
+                    <div style="
+                        border-top: 1px solid #e5e7eb; padding-top: 20px;
+                    ">
+                        <h3 style="margin: 0 0 16px 0; color: #374151; font-size: 16px;">Admin Actions</h3>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <button 
+                                onclick="window.folderCollaboration.showInviteMemberDialog()"
+                                style="
+                                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                                    color: white; border: none; padding: 12px 16px; 
+                                    border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+                                "
+                            >
+                                ➕ Invite Member
+                            </button>
+                            
+                            <button 
+                                onclick="window.folderCollaboration.exportTeamData()"
+                                style="
+                                    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+                                    color: white; border: none; padding: 12px 16px; 
+                                    border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+                                "
+                            >
+                                📥 Export Team Data
+                            </button>
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <!-- Role Permissions Info -->
+                <div style="
+                    background: #f0f9ff; padding: 16px; border-radius: 8px; 
+                    margin-top: 20px; border-left: 4px solid #3b82f6;
+                ">
+                    <h4 style="margin: 0 0 8px 0; color: #1e40af; font-size: 14px;">Role Permissions</h4>
+                    <div style="font-size: 12px; color: #1e3a8a; line-height: 1.4;">
+                        <strong>👑 Admin:</strong> Full access, can manage team<br>
+                        <strong>👔 Manager:</strong> View and edit all data<br>
+                        <strong>🎯 Recruiter:</strong> View and edit candidates<br>
+                        <strong>👁️ Viewer:</strong> Read-only access
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+}
+
+// Add these new methods to handle team management actions:
+
+async changeMemberRole(memberId, newRole) {
+    try {
+        this.showNotification('🔄 Updating member role...', 'info');
+        
+        // Read current team data
+        const teamData = await this.readCollaborationData();
+        
+        // Find and update the member
+        const memberIndex = teamData.users.findIndex(u => u.id === memberId);
+        if (memberIndex === -1) {
+            throw new Error('Member not found');
+        }
+        
+        const oldRole = teamData.users[memberIndex].role;
+        teamData.users[memberIndex].role = newRole;
+        teamData.users[memberIndex].lastModified = new Date().toISOString();
+        teamData.users[memberIndex].modifiedBy = this.currentUser.id;
+        
+        // Save changes
+        await this.saveCollaborationData(teamData);
+        
+        // Update local state
+        this.teamMembers = teamData.users;
+        this.collaborationData = teamData;
+        
+        this.showNotification(`✅ Role changed from ${oldRole} to ${newRole}`, 'success');
+        
+        // Refresh the dialog
+        document.querySelector('[style*="position: fixed"][style*="backdrop-filter"]')?.remove();
+        setTimeout(() => this.showTeamManagement(), 500);
+        
+    } catch (error) {
+        console.error('❌ Error changing member role:', error);
+        this.showNotification('❌ Failed to update member role', 'error');
+    }
+}
+
+async removeMember(memberId, memberName) {
+    // Confirm removal
+    if (!confirm(`Are you sure you want to remove ${memberName} from the team?\n\nThis action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        this.showNotification('🗑️ Removing team member...', 'info');
+        
+        // Read current team data
+        const teamData = await this.readCollaborationData();
+        
+        // Remove the member
+        teamData.users = teamData.users.filter(u => u.id !== memberId);
+        teamData.lastActivity = new Date().toISOString();
+        teamData.lastModifiedBy = this.currentUser.id;
+        
+        // Save changes
+        await this.saveCollaborationData(teamData);
+        
+        // Update local state
+        this.teamMembers = teamData.users;
+        this.collaborationData = teamData;
+        
+        this.showNotification(`✅ ${memberName} removed from team`, 'success');
+        
+        // Refresh the dialog
+        document.querySelector('[style*="position: fixed"][style*="backdrop-filter"]')?.remove();
+        setTimeout(() => this.showTeamManagement(), 500);
+        
+    } catch (error) {
+        console.error('❌ Error removing member:', error);
+        this.showNotification('❌ Failed to remove team member', 'error');
+    }
+}
+
+showInviteMemberDialog() {
+    // Close current dialog
+    document.querySelector('[style*="position: fixed"][style*="backdrop-filter"]')?.remove();
+    
+    // Create invite dialog
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.8); display: flex;
+        justify-content: center; align-items: center; z-index: 10000;
+        backdrop-filter: blur(5px);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    overlay.innerHTML = `
+        <div style="
+            background: white; padding: 32px; border-radius: 16px; 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); 
+            max-width: 500px; width: 90%;
+        ">
+            <h2 style="margin: 0 0 20px 0; color: #374151; font-size: 24px;">➕ Invite Team Member</h2>
+            
+            <div style="background: #f0f9ff; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <p style="margin: 0; font-size: 14px; color: #1e40af;">
+                    <strong>💡 How to invite:</strong><br>
+                    1. Share the folder location with your team member<br>
+                    2. Ask them to select the same folder in RecruitPro<br>
+                    3. They'll automatically be prompted to join the team
+                </p>
+            </div>
+            
+            <div style="background: #ecfdf5; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <p style="margin: 0; font-size: 14px; color: #047857;">
+                    <strong>📁 Folder Location:</strong><br>
+                    <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace;">
+                        ${this.currentFolder.name}
+                    </code>
+                </p>
+            </div>
+            
+            <div style="display: flex; gap: 12px;">
+                <button 
+                    onclick="this.closest('[style*=\"position: fixed\"]').remove()"
+                    style="
+                        flex: 1; background: #f3f4f6; color: #374151; border: none; 
+                        padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px;
+                    "
+                >
+                    Close
+                </button>
+                <button 
+                    onclick="window.folderCollaboration.copyFolderInfo()"
+                    style="
+                        flex: 2; background: #10b981; color: white; border: none; 
+                        padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+                    "
+                >
+                    📋 Copy Folder Info
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+}
+
+copyFolderInfo() {
+    const folderInfo = `RecruitPro Team Folder: ${this.currentFolder.name}\n\nTo join the team:\n1. Open RecruitPro\n2. Click the folder icon in the header\n3. Select "Select Folder" \n4. Choose this folder location\n5. Follow the prompts to join the team`;
+    
+    navigator.clipboard.writeText(folderInfo).then(() => {
+        this.showNotification('📋 Folder info copied to clipboard!', 'success');
+        document.querySelector('[style*="position: fixed"][style*="backdrop-filter"]')?.remove();
+    }).catch(() => {
+        this.showNotification('❌ Could not copy to clipboard', 'error');
+    });
+}
+
+exportTeamData() {
+    const teamData = {
+        folderName: this.currentFolder.name,
+        exported: new Date().toISOString(),
+        exportedBy: this.currentUser.name,
+        teamMembers: this.teamMembers.map(member => ({
+            name: member.name,
+            email: member.email,
+            role: member.role,
+            joinedAt: member.joinedAt,
+            isCreator: member.isCreator || false
+        }))
+    };
+    
+    const blob = new Blob([JSON.stringify(teamData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `team-export-${this.currentFolder.name}-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    this.showNotification('📥 Team data exported successfully!', 'success');
+}
+
+// Helper method to format dates
+formatDate(dateString) {
+    try {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    } catch {
+        return 'Unknown';
+    }
+}
+
+// Note: Add these methods to your existing FolderCollaborationManager class
+// Replace the empty showTeamManagement() function with the complete implementation above
 }
 
 // Initialize the Folder Collaboration Manager

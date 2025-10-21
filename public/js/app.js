@@ -265,6 +265,13 @@ const handleLogin = (user) => {
     }, 2000); // Wait 2 seconds after login
 };
 
+// Listen for the new secure auth system
+document.addEventListener('userAuthenticated', (event) => {
+    const { user, team } = event.detail;
+    console.log(`🔐 Authenticated: ${user.name} from ${team.name}`);
+    handleLogin(user);
+});
+
     // Handle user logout
     const handleLogout = () => {
         setCurrentUser(null);
@@ -388,11 +395,11 @@ helpers.storage.save('recruitpro_warm_candidates', updatedWarmCandidates);
         }
     };
 
-    // Render login screen if no user
-    if (!currentUser) {
-        console.log('Rendering login screen');
-        return <LoginComponent onLogin={handleLogin} />;
-    }
+    // The secure team auth system handles login automatically
+if (!currentUser) {
+    console.log('Waiting for secure authentication...');
+    return null; // Secure auth system will show login interface
+}
 
     // Render loading screen
     if (loading) {

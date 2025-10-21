@@ -907,16 +907,17 @@ showTeamManagementDialog(isAdmin) {
                         </p>
                     </div>
                     <button 
-                        onclick="this.closest('[style*=\"position: fixed\"]').remove()"
-                        style="
-                            background: rgba(255,255,255,0.2); border: none; color: white;
-                            width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
-                            display: flex; align-items: center; justify-content: center;
-                            font-size: 18px;
-                        "
-                    >
-                        ×
-                    </button>
+                        <button 
+    onclick="this.parentElement.parentElement.parentElement.parentElement.remove()"
+    style="
+        background: rgba(255,255,255,0.2); border: none; color: white;
+        width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px;
+    "
+>
+    ×
+</button>
                 </div>
             </div>
             

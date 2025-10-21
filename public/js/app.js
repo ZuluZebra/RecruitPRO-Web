@@ -253,10 +253,17 @@ const loadCompanies = async () => {
 // ⬆️ END OF NEW FUNCTION
 
     // Handle user login
-    const handleLogin = (user) => {
-        console.log('Login successful');
-        setCurrentUser(user);
-    };
+const handleLogin = (user) => {
+    console.log('Login successful');
+    setCurrentUser(user);
+    
+    // Check for folder reconnection after successful login
+    setTimeout(() => {
+        if (window.folderCollaboration) {
+            window.folderCollaboration.checkForReconnection();
+        }
+    }, 2000); // Wait 2 seconds after login
+};
 
     // Handle user logout
     const handleLogout = () => {

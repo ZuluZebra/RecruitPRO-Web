@@ -74,6 +74,194 @@ const CRMClock = () => {
     );
 };
 
+// Add this BEFORE the DashboardComponent definition
+const FolderCollaborationButton = () => {
+    const [showDropdown, setShowDropdown] = React.useState(false);
+    const [folderStatus, setFolderStatus] = React.useState('none');
+    const [teamCount, setTeamCount] = React.useState(0);
+    
+    // Check folder status periodically
+    React.useEffect(() => {
+        const checkFolderStatus = () => {
+            if (window.folderCollaboration) {
+                const isConnected = window.folderCollaboration.currentFolder !== null;
+                const isTeam = window.folderCollaboration.isTeamFolder;
+                const members = window.folderCollaboration.teamMembers?.length || 0;
+                
+                setFolderStatus(isConnected ? (isTeam ? 'team' : 'folder') : 'none');
+                setTeamCount(members);
+            }
+        };
+        
+        checkFolderStatus();
+        const interval = setInterval(checkFolderStatus, 2000);
+        
+        return () => clearInterval(interval);
+    }, []);
+    
+    const getFolderIcon = () => {
+        switch (folderStatus) {
+            case 'team': return '👥';
+            case 'folder': return '📁';
+            default: return '📂';
+        }
+    };
+    
+    const getFolderTooltip = () => {
+        switch (folderStatus) {
+            case 'team': return `Team folder (${teamCount} members)`;
+            case 'folder': return 'Folder connected';
+            default: return 'Connect folder for team collaboration';
+        }
+    };
+    
+    const handleSelectFolder = () => {
+        setShowDropdown(false);
+        if (window.folderCollaboration) {
+            window.folderCollaboration.selectCollaborationFolder();
+        }
+    };
+    
+    const handleManageTeam = () => {
+        setShowDropdown(false);
+        if (window.folderCollaboration) {
+            window.folderCollaboration.showTeamManagement();
+        }
+    };
+    
+    return (
+        <div style={{ position: 'relative' }}>
+            <button 
+                className="theme-toggle"
+                onClick={() => setShowDropdown(!showDropdown)}
+                title={getFolderTooltip()}
+                style={{
+                    background: folderStatus === 'team' ? 'linear-gradient(135deg, #10b981 0%, #047857 100%)' : 
+                               folderStatus === 'folder' ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
+                               'none',
+                    color: folderStatus !== 'none' ? 'white' : 'var(--text-primary)',
+                    boxShadow: folderStatus !== 'none' ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'
+                }}
+            >
+                {getFolderIcon()}
+                
+                {/* Team member count badge */}
+                {folderStatus === 'team' && teamCount > 0 && (
+                    <span style={{
+                        position: 'absolute',
+                        top: '-6px',
+                        right: '-6px',
+                        background: '#dc2626',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        fontSize: '10px',
+                        fontWeight: '700',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '2px solid white',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }}>
+                        {teamCount > 9 ? '9+' : teamCount}
+                    </span>
+                )}
+            </button>
+            
+            {/* Dropdown Menu */}
+            {showDropdown && (
+                <>
+                    {/* Backdrop */}
+                    <div 
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            zIndex: 998
+                        }}
+                        onClick={() => setShowDropdown(false)}
+                    />
+                    
+                    {/* Dropdown */}
+                    <div style={{
+                        position: 'absolute',
+                        top: '50px',
+                        right: '0',
+                        background: 'white',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                        padding: '8px 0',
+                        minWidth: '200px',
+                        zIndex: 999,
+                        fontSize: '14px'
+                    }}>
+                        {/* Current Status */}
+                        <div style={{
+                            padding: '12px 16px',
+                            borderBottom: '1px solid var(--border-color)',
+                            marginBottom: '8px'
+                        }}>
+                            <div style={{ fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
+                                Folder Status
+                            </div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                {folderStatus === 'team' ? `Team active (${teamCount} members)` :
+                                 folderStatus === 'folder' ? 'Folder connected' :
+                                 'No folder selected'}
+                            </div>
+                        </div>
+                        
+                        {/* Actions */}
+                        <button
+                            onClick={handleSelectFolder}
+                            style={{
+                                width: '100%',
+                                padding: '10px 16px',
+                                border: 'none',
+                                background: 'transparent',
+                                textAlign: 'left',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                color: 'var(--text-primary)',
+                                transition: 'background 0.2s'
+                            }}
+                            onMouseOver={(e) => e.target.style.background = 'var(--bg-secondary)'}
+                            onMouseOut={(e) => e.target.style.background = 'transparent'}
+                        >
+                            📁 {folderStatus === 'none' ? 'Select Folder' : 'Change Folder'}
+                        </button>
+                        
+                        {folderStatus !== 'none' && (
+                            <button
+                                onClick={handleManageTeam}
+                                style={{
+                                    width: '100%',
+                                    padding: '10px 16px',
+                                    border: 'none',
+                                    background: 'transparent',
+                                    textAlign: 'left',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    color: 'var(--text-primary)',
+                                    transition: 'background 0.2s'
+                                }}
+                                onMouseOver={(e) => e.target.style.background = 'var(--bg-secondary)'}
+                                onMouseOut={(e) => e.target.style.background = 'transparent'}
+                            >
+                                👥 Manage Team
+                            </button>
+                        )}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
+
 
 const DashboardComponent = ({ 
     currentUser, 
@@ -1246,6 +1434,9 @@ const deleteNote = async (noteId) => {
     >
         {currentTheme === 'light' ? '🌙' : '☀️'}
     </button>
+
+        {/* ADD THIS FOLDER COLLABORATION BUTTON */}
+<FolderCollaborationButton />
     
     <div className="user-info">
         <span>{currentUser.name}</span>

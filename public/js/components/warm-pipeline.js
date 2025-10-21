@@ -159,10 +159,15 @@ const saveWarmCandidates = (candidates) => {
             // Clean up warm-specific properties
             const { movedToWarmDate, lastContact, warmStatus, communications, totalCommunications, lastCommunicationType, ...activeCandidate } = warmCandidate;
             
-            // Add back to active candidates
-            const updatedActiveCandidates = [{ ...activeCandidate, readiness: 'ready' }, ...candidates];
-            setCandidates(updatedActiveCandidates);
-            helpers.storage.save('recruitpro_candidates', updatedActiveCandidates); // Save active candidates
+            // Add back to active candidates with attribution
+const candidateWithAttribution = window.updateUserAttribution({ 
+    ...activeCandidate, 
+    readiness: 'ready' 
+});
+const updatedActiveCandidates = [candidateWithAttribution, ...candidates];
+setCandidates(updatedActiveCandidates);
+helpers.storage.save('recruitpro_candidates', updatedActiveCandidates); // Save active candidates
+            
             
             // Remove from warm pipeline
             const updatedWarmCandidates = warmCandidates.filter(c => c.id !== warmCandidateId);

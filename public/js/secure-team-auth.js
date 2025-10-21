@@ -32,10 +32,19 @@ class SecureTeamUserSystem {
     }
 
     init() {
-        this.loadTeams();
-        this.checkExistingSession();
+    console.log('🔐 Initializing secure team system...');
+    this.loadTeams();
+    
+    // Check for existing session FIRST, only show auth UI if no valid session
+    const hasValidSession = this.checkExistingSession();
+    
+    if (!hasValidSession) {
+        console.log('📝 No valid session, showing auth interface');
         this.setupAuthUI();
+    } else {
+        console.log('✅ Valid session found, user should be logged in');
     }
+}
 
     // ==========================================
     // TEAM MANAGEMENT
@@ -144,27 +153,28 @@ class SecureTeamUserSystem {
     // ==========================================
 
     checkExistingSession() {
-        const session = localStorage.getItem('recruitpro_current_session');
-        if (session) {
-            const sessionData = JSON.parse(session);
-            
-            // Find user in teams
-            for (const teamCode in this.teams) {
-                const user = this.teams[teamCode].users.find(u => u.id === sessionData.userId);
-                if (user && sessionData.expires > Date.now()) {
-                    this.currentUser = user;
-                    this.currentTeam = this.teams[teamCode];
-                    this.isOwner = user.isOwner || false;
-                    console.log(`🔐 Restored session for ${user.name} (${this.currentTeam.name})`);
-                    this.onLoginSuccess(user);
-                    return;
-                }
+    const session = localStorage.getItem('recruitpro_current_session');
+    if (session) {
+        const sessionData = JSON.parse(session);
+        
+        // Find user in teams
+        for (const teamCode in this.teams) {
+            const user = this.teams[teamCode].users.find(u => u.id === sessionData.userId);
+            if (user && sessionData.expires > Date.now()) {
+                this.currentUser = user;
+                this.currentTeam = this.teams[teamCode];
+                this.isOwner = user.isOwner || false;
+                console.log(`🔐 Restored session for ${user.name} (${this.currentTeam.name})`);
+                this.onLoginSuccess(user);
+                return true; // ✅ SESSION FOUND
             }
         }
-        
-        // No valid session found
-        this.showAuthInterface();
     }
+    
+    // ❌ NO VALID SESSION FOUND
+    console.log('❌ No valid session found');
+    return false;
+}
 
     async handleLogin(teamCode, email, password) {
         this.clearMessages();

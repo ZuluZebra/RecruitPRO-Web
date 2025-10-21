@@ -196,8 +196,8 @@ const updatedProjects = [newProject, ...projects];
         if (!this.isOnline) {
             const projects = helpers.storage.load('recruitpro_projects') || [];
             const updatedProjects = projects.map(p => 
-                p.id == id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p
-            );
+    p.id == id ? window.updateUserAttribution({ ...p, ...updates }) : p
+);
             helpers.storage.save('recruitpro_projects', updatedProjects);
             return { data: { message: 'Project updated successfully' }, error: null };
         }

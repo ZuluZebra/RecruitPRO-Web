@@ -27,10 +27,7 @@ class FolderCollaborationManager {
     // Check for existing folder access
     await this.checkExistingFolderAccess();
     
-    // NEW: Check if we should prompt for reconnection
-    setTimeout(() => {
-        this.checkForReconnection();
-    }, 2000); // Wait 2 seconds after app load
+    // REMOVED: Don't check for reconnection here anymore
     
     console.log('✅ Folder Collaboration System ready');
 }

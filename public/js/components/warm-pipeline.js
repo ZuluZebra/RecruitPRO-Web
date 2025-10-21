@@ -135,17 +135,17 @@ const saveWarmCandidates = (candidates) => {
         };
 
         const updatedWarmCandidates = warmCandidates.map(candidate => {
-            if (candidate.id === candidateId) {
-                return {
-                    ...candidate,
-                    communications: [communication, ...(candidate.communications || [])],
-                    lastContact: updateLastContact ? timestamp : candidate.lastContact,
-                    lastCommunicationType: communicationType,
-                    totalCommunications: (candidate.totalCommunications || 0) + 1
-                };
-            }
-            return candidate;
+    if (candidate.id === candidateId) {
+        return window.updateUserAttribution({
+            ...candidate,
+            communications: [communication, ...(candidate.communications || [])],
+            lastContact: updateLastContact ? timestamp : candidate.lastContact,
+            lastCommunicationType: communicationType,
+            totalCommunications: (candidate.totalCommunications || 0) + 1
         });
+    }
+    return candidate;
+});
 
         setWarmCandidates(updatedWarmCandidates);
         saveWarmCandidates(updatedWarmCandidates); // Save to localStorage

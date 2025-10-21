@@ -196,14 +196,14 @@ const [currentViewingFile, setCurrentViewingFile] = React.useState(null);
             } else {
                 console.log('✅ Documents uploaded successfully');
                 
-                // SAVE TO LOCALSTORAGE like rest of application
-                const existingCandidates = JSON.parse(localStorage.getItem('recruitpro_candidates') || '[]');
-                const updatedCandidates = existingCandidates.map(c => 
-                    c.id === candidate.id 
-                        ? { ...c, documents: updatedFiles }
-                        : c
-                );
-                localStorage.setItem('recruitpro_candidates', JSON.stringify(updatedCandidates));
+                // SAVE TO LOCALSTORAGE with user attribution
+const existingCandidates = JSON.parse(localStorage.getItem('recruitpro_candidates') || '[]');
+const updatedCandidates = existingCandidates.map(c => 
+    c.id === candidate.id 
+        ? window.updateUserAttribution({ ...c, documents: updatedFiles })
+        : c
+);
+localStorage.setItem('recruitpro_candidates', JSON.stringify(updatedCandidates));
                 console.log('✅ Documents saved to localStorage');
             }
         } catch (error) {

@@ -18,17 +18,22 @@ class FolderCollaborationManager {
     }
 
     async init() {
-        // First ensure we have a user profile
-        await this.ensureUserProfile();
-        
-        // Set up the folder collaboration UI
-        this.setupCollaborationUI();
-        
-        // Check for existing folder access
-        await this.checkExistingFolderAccess();
-        
-        console.log('✅ Folder Collaboration System ready');
-    }
+    // First ensure we have a user profile
+    await this.ensureUserProfile();
+    
+    // Set up the folder collaboration UI
+    this.setupCollaborationUI();
+    
+    // Check for existing folder access
+    await this.checkExistingFolderAccess();
+    
+    // NEW: Check if we should prompt for reconnection
+    setTimeout(() => {
+        this.checkForReconnection();
+    }, 2000); // Wait 2 seconds after app load
+    
+    console.log('✅ Folder Collaboration System ready');
+}
 
     // ==========================================
     // USER PROFILE MANAGEMENT
@@ -1178,9 +1183,238 @@ formatDate(dateString) {
     }
 }
 
-// Note: Add these methods to your existing FolderCollaborationManager class
-// Replace the empty showTeamManagement() function with the complete implementation above
+// ==========================================
+// FOLDER PERSISTENCE & AUTO-RECONNECT SYSTEM
+// ==========================================
+
+saveFolderInfo() {
+    if (this.currentFolder) {
+        const folderInfo = {
+            name: this.currentFolder.name,
+            isTeamFolder: this.isTeamFolder,
+            teamMemberCount: this.teamMembers?.length || 0,
+            lastConnected: new Date().toISOString(),
+            userRole: this.getCurrentUserRole(),
+            folderType: this.folderType
+        };
+        
+        localStorage.setItem('recruitpro_last_folder', JSON.stringify(folderInfo));
+        console.log('💾 Saved folder info:', folderInfo);
+    }
 }
+
+loadSavedFolderInfo() {
+    const saved = localStorage.getItem('recruitpro_last_folder');
+    return saved ? JSON.parse(saved) : null;
+}
+
+getCurrentUserRole() {
+    if (this.teamMembers && this.currentUser) {
+        const member = this.teamMembers.find(m => m.id === this.currentUser.id);
+        return member?.role || 'unknown';
+    }
+    return 'unknown';
+}
+
+async checkForReconnection() {
+    const savedFolder = this.loadSavedFolderInfo();
+    
+    if (savedFolder && !this.currentFolder) {
+        console.log('📁 Found previous folder connection:', savedFolder);
+        this.showReconnectPrompt(savedFolder);
+        return true;
+    }
+    return false;
+}
+
+showReconnectPrompt(folderInfo) {
+    // Don't show if user dismissed recently
+    const lastDismissed = localStorage.getItem('recruitpro_reconnect_dismissed');
+    if (lastDismissed) {
+        const dismissedTime = new Date(lastDismissed);
+        const now = new Date();
+        const hoursSinceDismissed = (now - dismissedTime) / (1000 * 60 * 60);
+        
+        if (hoursSinceDismissed < 24) {
+            console.log('🔕 Reconnect prompt dismissed recently, skipping');
+            return;
+        }
+    }
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.7); display: flex;
+        justify-content: center; align-items: center; z-index: 10000;
+        backdrop-filter: blur(3px);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        animation: fadeIn 0.3s ease-out;
+    `;
+
+    const formatDate = (dateString) => {
+        try {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch {
+            return 'Recently';
+        }
+    };
+
+    overlay.innerHTML = `
+        <style>
+            @keyframes fadeIn {
+                from { opacity: 0; transform: scale(0.9); }
+                to { opacity: 1; transform: scale(1); }
+            }
+        </style>
+        <div style="
+            background: white; padding: 32px; border-radius: 16px; 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); 
+            max-width: 500px; width: 90%; position: relative;
+            animation: fadeIn 0.3s ease-out;
+        ">
+            <!-- Header -->
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="
+                    width: 80px; height: 80px; margin: 0 auto 16px; 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                    font-size: 32px; color: white;
+                ">📁</div>
+                <h2 style="margin: 0 0 8px 0; color: #374151; font-size: 24px;">
+                    Reconnect to Team Folder
+                </h2>
+                <p style="color: #6b7280; margin: 0; font-size: 14px;">
+                    You were previously connected to a team folder
+                </p>
+            </div>
+            
+            <!-- Folder Info -->
+            <div style="
+                background: #f9fafb; padding: 20px; border-radius: 12px; 
+                margin-bottom: 24px; border-left: 4px solid #667eea;
+            ">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <span style="font-size: 24px;">
+                        ${folderInfo.isTeamFolder ? '👥' : '📁'}
+                    </span>
+                    <div>
+                        <div style="font-weight: 600; color: #374151; font-size: 16px;">
+                            ${folderInfo.name}
+                        </div>
+                        <div style="font-size: 12px; color: #6b7280;">
+                            Last connected: ${formatDate(folderInfo.lastConnected)}
+                        </div>
+                    </div>
+                </div>
+                
+                ${folderInfo.isTeamFolder ? `
+                    <div style="
+                        background: #ecfdf5; padding: 12px; border-radius: 8px;
+                        border-left: 3px solid #10b981; margin-top: 12px;
+                    ">
+                        <div style="font-size: 13px; color: #047857;">
+                            <strong>🎯 Team Folder:</strong> ${folderInfo.teamMemberCount} member${folderInfo.teamMemberCount !== 1 ? 's' : ''}<br>
+                            <strong>👤 Your Role:</strong> ${folderInfo.userRole}
+                        </div>
+                    </div>
+                ` : `
+                    <div style="
+                        background: #fef3c7; padding: 12px; border-radius: 8px;
+                        border-left: 3px solid #f59e0b; margin-top: 12px;
+                    ">
+                        <div style="font-size: 13px; color: #92400e;">
+                            <strong>📁 Personal Folder:</strong> Individual workspace
+                        </div>
+                    </div>
+                `}
+            </div>
+            
+            <!-- Actions -->
+            <div style="display: flex; gap: 12px;">
+                <button 
+                    onclick="window.folderCollaboration.dismissReconnectPrompt()"
+                    style="
+                        flex: 1; background: #f3f4f6; color: #374151; border: none; 
+                        padding: 12px 16px; border-radius: 8px; cursor: pointer; 
+                        font-size: 14px; transition: background 0.2s;
+                    "
+                    onmouseover="this.style.background='#e5e7eb'"
+                    onmouseout="this.style.background='#f3f4f6'"
+                >
+                    Maybe Later
+                </button>
+                <button 
+                    onclick="window.folderCollaboration.quickReconnect()"
+                    style="
+                        flex: 2; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white; border: none; padding: 12px 16px; border-radius: 8px; 
+                        cursor: pointer; font-size: 14px; font-weight: 600;
+                        transition: transform 0.2s;
+                    "
+                    onmouseover="this.style.transform='translateY(-1px)'"
+                    onmouseout="this.style.transform='translateY(0)'"
+                >
+                    🔄 Reconnect Now
+                </button>
+            </div>
+            
+            <!-- Helper Text -->
+            <div style="
+                text-align: center; margin-top: 16px; font-size: 12px; 
+                color: #6b7280; line-height: 1.4;
+            ">
+                💡 You'll need to select the same folder location<br>
+                Team collaboration will resume automatically
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+}
+
+async quickReconnect() {
+    // Close the prompt
+    const overlay = document.querySelector('[style*="backdrop-filter"]');
+    if (overlay) overlay.remove();
+    
+    this.showNotification('📁 Select your previous folder to reconnect...', 'info');
+    
+    // Trigger folder selection
+    try {
+        await this.selectCollaborationFolder();
+    } catch (error) {
+        if (error.name !== 'AbortError') {
+            console.error('❌ Reconnect failed:', error);
+            this.showNotification('❌ Could not reconnect. Please try again.', 'error');
+        }
+    }
+}
+
+dismissReconnectPrompt() {
+    // Close the prompt
+    const overlay = document.querySelector('[style*="backdrop-filter"]');
+    if (overlay) overlay.remove();
+    
+    // Remember dismissal for 24 hours
+    localStorage.setItem('recruitpro_reconnect_dismissed', new Date().toISOString());
+    
+    this.showNotification('📁 You can reconnect anytime via the folder icon', 'info');
+}
+
+clearSavedFolderInfo() {
+    localStorage.removeItem('recruitpro_last_folder');
+    localStorage.removeItem('recruitpro_reconnect_dismissed');
+    console.log('🧹 Cleared saved folder info');
+}
+
+}
+
+
 
 // Initialize the Folder Collaboration Manager
 window.folderCollaboration = new FolderCollaborationManager();

@@ -724,24 +724,24 @@ console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
     }
 
     onLoginSuccess(user) {
-        console.log(`🎉 User logged in: ${user.name} (${this.currentTeam.name})`);
-        
-        // Remove auth interface
-        document.getElementById('secureAuthContainer')?.remove();
-        
-        // Trigger the main app
-        if (window.originalAppInit) {
-            window.originalAppInit(user);
-        } else if (typeof window.initMainApp === 'function') {
-            window.initMainApp(user);
-        } else {
-            // Dispatch event for main app
-            const event = new CustomEvent('userAuthenticated', { 
-                detail: { user: user, team: this.currentTeam } 
-            });
-            document.dispatchEvent(event);
-        }
+    console.log(`🎉 User logged in: ${user?.name || 'Unknown'} (${this.currentTeam?.name || 'Unknown Team'})`);
+    
+    // Remove auth interface
+    document.getElementById('secureAuthContainer')?.remove();
+    
+    // Trigger the main app
+    if (window.originalAppInit) {
+        window.originalAppInit(user);
+    } else if (typeof window.initMainApp === 'function') {
+        window.initMainApp(user);
+    } else {
+        // Dispatch event for main app
+        const event = new CustomEvent('userAuthenticated', { 
+            detail: { user: user, team: this.currentTeam } 
+        });
+        document.dispatchEvent(event);
     }
+}
 
     // ==========================================
     // PUBLIC API

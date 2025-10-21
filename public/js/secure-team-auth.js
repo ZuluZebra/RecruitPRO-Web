@@ -205,12 +205,12 @@ class SecureTeamUserSystem {
         this.saveTeams();
         
         // Create session
-        const session = {
-            userId: user.id,
-            teamCode: teamCode,
-            loginTime: new Date().toISOString(),
-            expires: Date.now() + (24 * 60 * 60 * 1000)
-        };
+const session = {
+    userId: user.id,
+    teamCode: teamCode,
+    loginTime: new Date().toISOString(),
+    expires: Date.now() + (30 * 24 * 60 * 60 * 1000) // 30 days
+};
         localStorage.setItem('recruitpro_current_session', JSON.stringify(session));
         
         console.log(`✅ Login successful: ${user.name} (${team.name})`);

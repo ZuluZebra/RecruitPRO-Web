@@ -287,18 +287,19 @@ const loadCompanies = async () => {
 const handleKeepWarm = (candidateId) => {
     const candidate = candidates.find(c => c.id === candidateId);
     if (candidate) {
-        // Add timestamp when moved to warm
-        const warmCandidate = {
-            ...candidate,
-            movedToWarmDate: new Date().toISOString(),
-            lastContact: new Date().toISOString(),
-            warmStatus: 'fresh'
-        };
-        
-        // Move to warm pipeline
-        const updatedWarmCandidates = [warmCandidate, ...warmCandidates];
-        setWarmCandidates(updatedWarmCandidates);
-        helpers.storage.save('recruitpro_warm_candidates', updatedWarmCandidates); // ADD THIS LINE
+        // Add timestamp when moved to warm with attribution
+const baseWarmCandidate = {
+    ...candidate,
+    movedToWarmDate: new Date().toISOString(),
+    lastContact: new Date().toISOString(),
+    warmStatus: 'fresh'
+};
+const warmCandidate = window.updateUserAttribution(baseWarmCandidate);
+
+// Move to warm pipeline
+const updatedWarmCandidates = [warmCandidate, ...warmCandidates];
+setWarmCandidates(updatedWarmCandidates);
+helpers.storage.save('recruitpro_warm_candidates', updatedWarmCandidates);
         
         // Remove from active candidates
         const updatedActiveCandidates = candidates.filter(c => c.id !== candidateId);

@@ -167,21 +167,21 @@ helpers.storage.save('recruitpro_candidates', candidates);
     async createProject(project) {
         if (!this.isOnline) {
             const projects = helpers.storage.load('recruitpro_projects') || [];
-            const newProject = { 
-                ...project, 
-                id: Date.now(), 
-                created_at: new Date().toISOString(), 
-                status: 'active',
-                comments: [],
-                timeline: [{
-                    id: Date.now() + 1,
-                    type: 'created',
-                    message: `Project created by ${project.created_by}`,
-                    user: project.created_by,
-                    created_at: new Date().toISOString()
-                }]
-            };
-            const updatedProjects = [newProject, ...projects];
+            const baseProject = { 
+    ...project, 
+    id: Date.now(), 
+    status: 'active',
+    comments: [],
+    timeline: [{
+        id: Date.now() + 1,
+        type: 'created',
+        message: `Project created by ${project.created_by}`,
+        user: project.created_by,
+        created_at: new Date().toISOString()
+    }]
+};
+const newProject = window.addUserAttribution(baseProject);
+const updatedProjects = [newProject, ...projects];
             helpers.storage.save('recruitpro_projects', updatedProjects);
             return { data: newProject, error: null };
         }

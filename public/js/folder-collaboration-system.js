@@ -575,68 +575,18 @@ class FolderCollaborationManager {
     }
 
     addUserIndicator() {
-        if (!this.currentUser) return;
-        
-        const existing = document.getElementById('userIndicator');
-        if (existing) existing.remove();
-
-        const indicator = document.createElement('div');
-        indicator.id = 'userIndicator';
-        indicator.style.cssText = `
-            position: fixed; top: 20px; left: 20px; 
-            background: white; border: 2px solid #e5e7eb; border-radius: 12px; 
-            padding: 10px 14px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
-            z-index: 1000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 13px; display: flex; align-items: center; gap: 8px;
-            max-width: 280px; cursor: pointer; transition: all 0.2s;
-        `;
-
-        const roleIcon = this.getRoleIcon(this.currentUser.role);
-        const roleColor = this.getRoleColor(this.currentUser.role);
-        
-        indicator.innerHTML = `
-            <span style="font-size: 16px;">${roleIcon}</span>
-            <div style="flex: 1; min-width: 0;">
-                <div style="font-weight: 600; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    ${this.currentUser.name}
-                </div>
-                <div style="font-size: 11px; color: ${roleColor}; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">
-                    ${this.currentUser.role}
-                </div>
-            </div>
-            ${this.isTeamFolder ? '<span style="color: #10b981; font-size: 12px;" title="Team Collaboration Active">👥</span>' : ''}
-        `;
-        
-        indicator.addEventListener('click', () => this.showUserProfile());
-        indicator.addEventListener('mouseenter', () => {
-            indicator.style.transform = 'translateY(-1px)';
-            indicator.style.borderColor = '#3b82f6';
-        });
-        indicator.addEventListener('mouseleave', () => {
-            indicator.style.transform = 'translateY(0)';
-            indicator.style.borderColor = '#e5e7eb';
-        });
-
-        document.body.appendChild(indicator);
-    }
+    // Remove the floating user indicator completely  
+    const existing = document.getElementById('userIndicator');
+    if (existing) existing.remove();
+    console.log('👤 User indicator disabled - using header integration');
+}
 
     addCollaborationPanel() {
-        const existing = document.getElementById('collaborationPanel');
-        if (existing) existing.remove();
-
-        const panel = document.createElement('div');
-        panel.id = 'collaborationPanel';
-        panel.style.cssText = `
-            position: fixed; bottom: 20px; right: 20px; 
-            background: white; border: 2px solid #e5e7eb; border-radius: 16px; 
-            padding: 20px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); 
-            z-index: 1000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 13px; min-width: 320px; max-width: 400px;
-        `;
-        
-        this.updateCollaborationPanelContent(panel);
-        document.body.appendChild(panel);
-    }
+    // Remove the floating panel completely
+    const existing = document.getElementById('collaborationPanel');
+    if (existing) existing.remove();
+    console.log('📁 Collaboration panel disabled - using header integration');
+}
 
     updateCollaborationPanelContent(panel) {
         const hasFolder = this.currentFolder !== null;

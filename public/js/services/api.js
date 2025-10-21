@@ -96,8 +96,12 @@ class APIService {
                 return { data: null, error: 'Candidate not found' };
             }
             
-            candidates[candidateIndex] = { ...candidates[candidateIndex], ...updates, updated_at: new Date().toISOString() };
-            helpers.storage.save('recruitpro_candidates', candidates);
+            const updatedCandidate = window.updateUserAttribution({
+    ...candidates[candidateIndex], 
+    ...updates
+});
+candidates[candidateIndex] = updatedCandidate;
+helpers.storage.save('recruitpro_candidates', candidates);
             return { data: candidates[candidateIndex], error: null };
         }
 

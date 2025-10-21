@@ -898,11 +898,17 @@ showTeamManagementDialog(isAdmin) {
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <h2 style="margin: 0 0 4px 0; font-size: 24px; font-weight: 700;">
-                            👥 Team Management
-                        </h2>
-                        <p style="margin: 0; opacity: 0.9; font-size: 14px;">
-                            ${this.currentFolder.name} • ${this.teamMembers.length} member${this.teamMembers.length !== 1 ? 's' : ''}
-                        </p>
+    👥 Team Management
+</h2>
+<p style="margin: 0; opacity: 0.9; font-size: 14px;">
+    ${this.currentFolder.name} • ${this.teamMembers.length} member${this.teamMembers.length !== 1 ? 's' : ''}
+</p>
+<div style="
+    background: rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 6px; 
+    margin-top: 8px; font-family: monospace; font-size: 13px; font-weight: 600;
+">
+    Team Code: ${window.getCurrentTeam()?.code || 'Loading...'}
+</div>
                     </div>
                     <button 
                         <button 

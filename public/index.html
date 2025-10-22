@@ -303,4 +303,21 @@
         });
     </script>
 </body>
+    <script>
+// Force authentication check on page load
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🔍 Page loaded, checking authentication...');
+    if (window.secureTeamAuth) {
+        window.secureTeamAuth.checkExistingSession();
+    } else {
+        console.log('🚀 Initializing secure team auth...');
+        setTimeout(() => {
+            if (window.secureTeamAuth) {
+                window.secureTeamAuth.checkExistingSession();
+            }
+        }, 100);
+    }
+});
+</script>
+</body>
 </html>

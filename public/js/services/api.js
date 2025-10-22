@@ -67,12 +67,18 @@ class APIService {
         if (!this.isOnline) {
             const candidates = helpers.storage.load('recruitpro_candidates') || [];
             const newCandidate = { 
-                ...candidate, 
-                id: Date.now(), 
-                created_at: new Date().toISOString(),
-                interview_feedback: [],
-                timeline: []
-            };
+    ...candidate, 
+    id: Date.now(), 
+    created_at: new Date().toISOString(),
+    interview_feedback: [],
+    timeline: [],
+    // ADD PRIVACY FIELDS FOR NEW CANDIDATES (if not already present)
+    visibility: candidate.visibility || 'public',
+    isConfidential: candidate.isConfidential || false,
+    sharedWith: candidate.sharedWith || [],
+    privacyUpdatedAt: candidate.privacyUpdatedAt || new Date().toISOString(),
+    privacyUpdatedBy: candidate.privacyUpdatedBy || null
+};
             const updatedCandidates = [newCandidate, ...candidates];
             helpers.storage.save('recruitpro_candidates', updatedCandidates);
             return { data: newCandidate, error: null };

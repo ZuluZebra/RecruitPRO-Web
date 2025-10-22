@@ -905,20 +905,18 @@ const loadMoreCandidates = async () => {
             </>
         )}
 
-            {showAddModal && (
-                <AddCandidateModal
-                    currentUser={currentUser}
-                    projects={projects}
-                    onClose={() => setShowAddModal(false)}
-                    onAdd={(candidateData) => {
-    const candidateWithAttribution = window.addUserAttribution(candidateData);
-    const newCandidates = [candidateWithAttribution, ...candidates];
-    setCandidates(newCandidates);
-    helpers.storage.save('recruitpro_candidates', newCandidates);
-    setShowAddModal(false);
-}}
-                />
-            )}
+            {showAddModal && window.AddCandidateModal && React.createElement(window.AddCandidateModal, {
+    currentUser: currentUser,
+    projects: projects,
+    onClose: () => setShowAddModal(false),
+    onAdd: (candidateData) => {
+        const candidateWithAttribution = window.addUserAttribution(candidateData);
+        const newCandidates = [candidateWithAttribution, ...candidates];
+        setCandidates(newCandidates);
+        helpers.storage.save('recruitpro_candidates', newCandidates);
+        setShowAddModal(false);
+    }
+})}
         </div>
     );
 };

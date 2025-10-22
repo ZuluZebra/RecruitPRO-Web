@@ -1,3 +1,4 @@
+
 // Main RecruitPro Application - FIXED INTERVIEW FEEDBACK STATE MANAGEMENT
 const RecruitProApp = () => {
     console.log('RecruitPro starting...');
@@ -11,6 +12,15 @@ const RecruitProApp = () => {
     const [loginSessions, setLoginSessions] = React.useState([]);
     const [warmCandidates, setWarmCandidates] = React.useState([]);
     const [companies, setCompanies] = React.useState([]);  // ADD THIS LINE
+
+    // Check for existing session on component mount
+    React.useEffect(() => {
+        const existingUser = window.multiUserAuth?.getCurrentUser();
+        if (existingUser) {
+            setCurrentUser(existingUser);
+            console.log('🔐 Restored session for:', existingUser.name);
+        }
+    }, []);
 
     
     // UI state
@@ -268,7 +278,7 @@ const handleLogin = (user) => {
 // Listen for the new secure auth system
 document.addEventListener('userAuthenticated', (event) => {
     const { user, team } = event.detail;
-    console.log(`🔐 Authenticated: ${user.name} from ${team.name}`);
+    console.log(`🔐 Authenticated: ${user.name} from ${team?.name || 'RecruitPro'}`);
     handleLogin(user);
 });
 
@@ -395,10 +405,10 @@ helpers.storage.save('recruitpro_warm_candidates', updatedWarmCandidates);
         }
     };
 
-    // The secure team auth system handles login automatically
+    // Check if user is authenticated via the multi-user auth system
 if (!currentUser) {
-    console.log('Waiting for secure authentication...');
-    return null; // Secure auth system will show login interface
+    // The multi-user auth system will handle showing login interface
+    return null;
 }
 
     // Render loading screen

@@ -100,20 +100,24 @@ const LoginComponent = ({ onLogin }) => {
             helpers.storage.save('recruitpro_login_sessions', updatedSessions);
             
             // Create session for multi-user auth with Remember Me support
-const rememberMe = document.getElementById('rememberMe')?.checked || false;
-const duration = rememberMe ? (30 * 24 * 60 * 60 * 1000) : (8 * 60 * 60 * 1000); // 30 days or 8 hours
+            const rememberMe = document.getElementById('rememberMe')?.checked || false;
+            const duration = rememberMe ? (30 * 24 * 60 * 60 * 1000) : (8 * 60 * 60 * 1000); // 30 days or 8 hours
 
-const session = {
-    userId: user.id,
-    loginTime: new Date().toISOString(),
-    expires: Date.now() + duration,
-    rememberMe: rememberMe
-};
-localStorage.setItem('recruitpro_current_session', JSON.stringify(session));
+            const session = {
+                userId: user.id,
+                loginTime: new Date().toISOString(),
+                expires: Date.now() + duration,
+                rememberMe: rememberMe
+            };
+            localStorage.setItem('recruitpro_current_session', JSON.stringify(session));
 
-console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
+            console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
             
-            onLogin(user);
+            // FIXED: Use setTimeout to prevent immediate conflicts
+            setTimeout(() => {
+                onLogin(user);
+            }, 100);
+            
         } else {
             alert('Incorrect password. Please try again.');
             setPassword('');
@@ -213,24 +217,28 @@ console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
                         <input
                             type="text"
                             className="password-input"
-                            placeholder="e.g., Sarah Johnson"
+                            placeholder="Your full name"
                             value={regData.name}
                             onChange={(e) => setRegData({...regData, name: e.target.value})}
-                            style={{ marginBottom: '15px' }}
+                            onKeyPress={handleKeyPress}
                         />
+                    </div>
 
+                    <div style={{ marginBottom: '20px' }}>
                         <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: 'var(--text-primary)' }}>
                             Email Address *
                         </label>
                         <input
                             type="email"
                             className="password-input"
-                            placeholder="sarah@company.com"
+                            placeholder="your.email@company.com"
                             value={regData.email}
                             onChange={(e) => setRegData({...regData, email: e.target.value})}
-                            style={{ marginBottom: '15px' }}
+                            onKeyPress={handleKeyPress}
                         />
+                    </div>
 
+                    <div style={{ marginBottom: '20px' }}>
                         <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: 'var(--text-primary)' }}>
                             Role *
                         </label>
@@ -238,38 +246,44 @@ console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
                             className="password-input"
                             value={regData.role}
                             onChange={(e) => setRegData({...regData, role: e.target.value})}
-                            style={{ marginBottom: '15px' }}
+                            style={{ padding: '12px', fontSize: '16px' }}
                         >
-                            <option value="recruiter">🎯 Recruiter</option>
-                            <option value="manager">👔 Hiring Manager</option>
-                            <option value="admin">👑 HR Admin</option>
-                            <option value="viewer">👁️ Team Member</option>
+                            <option value="admin">Admin</option>
+                            <option value="manager">Manager</option>
+                            <option value="recruiter">Recruiter</option>
+                            <option value="viewer">Viewer</option>
                         </select>
+                    </div>
 
+                    <div style={{ marginBottom: '20px' }}>
                         <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: 'var(--text-primary)' }}>
-                            Department/Company
+                            Department
                         </label>
                         <input
                             type="text"
                             className="password-input"
-                            placeholder="e.g., HR Department"
+                            placeholder="HR, Sales, etc."
                             value={regData.department}
                             onChange={(e) => setRegData({...regData, department: e.target.value})}
-                            style={{ marginBottom: '15px' }}
+                            onKeyPress={handleKeyPress}
                         />
+                    </div>
 
+                    <div style={{ marginBottom: '20px' }}>
                         <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: 'var(--text-primary)' }}>
                             Password *
                         </label>
                         <input
                             type="password"
                             className="password-input"
-                            placeholder="Create a secure password"
+                            placeholder="Choose a secure password"
                             value={regData.password}
                             onChange={(e) => setRegData({...regData, password: e.target.value})}
-                            style={{ marginBottom: '15px' }}
+                            onKeyPress={handleKeyPress}
                         />
+                    </div>
 
+                    <div style={{ marginBottom: '20px' }}>
                         <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: 'var(--text-primary)' }}>
                             Confirm Password *
                         </label>
@@ -282,7 +296,7 @@ console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
                             onKeyPress={handleKeyPress}
                         />
                     </div>
-                    
+
                     <button 
                         className="login-button"
                         onClick={handleRegister}
@@ -294,7 +308,11 @@ console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
                     <button 
                         className="login-button"
                         onClick={() => setShowRegister(false)}
-                        style={{ background: '#6b7280' }}
+                        style={{ 
+                            background: 'transparent',
+                            color: 'var(--accent-color)',
+                            border: '2px solid var(--accent-color)'
+                        }}
                     >
                         Back to Sign In
                     </button>
@@ -309,30 +327,29 @@ console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
                 <h1 className="login-title">RecruitPro</h1>
                 <p className="login-subtitle">Professional Recruitment CRM</p>
                 
-                {/* User Selection */}
+                {/* User Selection List */}
                 <div style={{ marginBottom: '20px' }}>
                     <label style={{ 
                         display: 'block', 
-                        marginBottom: '10px', 
+                        marginBottom: '8px', 
                         fontWeight: '600', 
                         color: 'var(--text-primary)',
-                        textAlign: 'center'
+                        fontSize: '14px'
                     }}>
-                        Select Your Account
+                        Select User Account
                     </label>
-                    
-                    <div style={{ 
-                        border: '1px solid var(--border-color)', 
-                        borderRadius: '8px', 
-                        maxHeight: '150px', 
-                        overflowY: 'auto' 
+                    <div style={{
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '8px',
+                        maxHeight: '160px',
+                        overflowY: 'auto'
                     }}>
-                        {users.filter(u => u.status === 'active').map(user => (
+                        {users.map(user => (
                             <div
                                 key={user.id}
                                 onClick={() => setSelectedUserId(user.id)}
                                 style={{
-                                    padding: '12px 16px',
+                                    padding: '12px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '12px',
@@ -433,46 +450,46 @@ console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
                     disabled={isLoading}
                 />
 
-                        {/* Remember Me Checkbox */}
-<div style={{
-    marginBottom: '20px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px'
-}}>
-    <input 
-        type="checkbox" 
-        id="rememberMe" 
-        defaultChecked={true}
-        style={{
-            margin: '0',
-            width: '16px',
-            height: '16px',
-            cursor: 'pointer',
-            accentColor: 'var(--accent-color)'
-        }}
-    />
-    <label 
-        htmlFor="rememberMe" 
-        style={{
-            fontSize: '14px',
-            color: 'var(--text-primary)',
-            cursor: 'pointer',
-            userSelect: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px'
-        }}
-    >
-        <span>Remember me for 30 days</span>
-        <span style={{
-            fontSize: '12px',
-            color: 'var(--text-muted)'
-        }}>
-            (recommended)
-        </span>
-    </label>
-</div>
+                {/* Remember Me Checkbox */}
+                <div style={{
+                    marginBottom: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                }}>
+                    <input 
+                        type="checkbox" 
+                        id="rememberMe" 
+                        defaultChecked={true}
+                        style={{
+                            margin: '0',
+                            width: '16px',
+                            height: '16px',
+                            cursor: 'pointer',
+                            accentColor: 'var(--accent-color)'
+                        }}
+                    />
+                    <label 
+                        htmlFor="rememberMe" 
+                        style={{
+                            fontSize: '14px',
+                            color: 'var(--text-primary)',
+                            cursor: 'pointer',
+                            userSelect: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                        }}
+                    >
+                        <span>Remember me for 30 days</span>
+                        <span style={{
+                            fontSize: '12px',
+                            color: 'var(--text-muted)'
+                        }}>
+                            (recommended)
+                        </span>
+                    </label>
+                </div>
                 
                 <button 
                     className="login-button"

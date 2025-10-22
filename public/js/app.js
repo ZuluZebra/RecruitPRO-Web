@@ -1,29 +1,6 @@
 // Main RecruitPro Application - FIXED INTERVIEW FEEDBACK STATE MANAGEMENT
 const RecruitProApp = () => {
     console.log('RecruitPro starting...');
-
-    // DISABLE CONFLICTING AUTH SYSTEMS - ADD THIS BLOCK
-    React.useEffect(() => {
-        console.log('🔧 Disabling conflicting auth systems...');
-        
-        // Remove any auth interfaces created by other systems
-        const secureAuthContainer = document.getElementById('secureAuthContainer');
-        if (secureAuthContainer) {
-            secureAuthContainer.remove();
-            console.log('🗑️ Removed secure auth container');
-        }
-        
-        // Disable the auth systems
-        if (window.secureTeamAuth) {
-            window.secureTeamAuth.currentUser = null;
-            console.log('🔧 Disabled secureTeamAuth');
-        }
-        
-        if (window.multiUserAuth) {
-            window.multiUserAuth.currentUser = null;
-            console.log('🔧 Disabled multiUserAuth');
-        }
-    }, []);
     
     // Core state
     const [currentUser, setCurrentUser] = React.useState(null);
@@ -33,7 +10,7 @@ const RecruitProApp = () => {
     const [interviewTemplates, setInterviewTemplates] = React.useState([]);
     const [loginSessions, setLoginSessions] = React.useState([]);
     const [warmCandidates, setWarmCandidates] = React.useState([]);
-    const [companies, setCompanies] = React.useState([]);  // ADD THIS LINE
+    const [companies, setCompanies] = React.useState([]);
 
     
     // UI state
@@ -50,37 +27,21 @@ const RecruitProApp = () => {
         helpers.themeManager.init();
     }, []);
 
-    // Check for existing session on app start
+    // Listen for the secure auth system - MOVED INSIDE REACT COMPONENT
     React.useEffect(() => {
-        const checkExistingSession = () => {
-            const session = localStorage.getItem('recruitpro_current_session');
-            if (session) {
-                try {
-                    const sessionData = JSON.parse(session);
-                    
-                    // Check if session is still valid
-                    if (sessionData.expires > Date.now()) {
-                        const users = JSON.parse(localStorage.getItem('recruitpro_registered_users') || '[]');
-                        const user = users.find(u => u.id === sessionData.userId);
-                        
-                        if (user) {
-                            console.log(`🔐 Restored session for ${user.name}`);
-                            setCurrentUser(user);
-                            return;
-                        }
-                    } else {
-                        console.log('🔐 Session expired, removing...');
-                        localStorage.removeItem('recruitpro_current_session');
-                    }
-                } catch (error) {
-                    console.error('Error parsing session:', error);
-                    localStorage.removeItem('recruitpro_current_session');
-                }
-            }
-            console.log('🔐 No valid session found');
+        const handleUserAuthenticated = (event) => {
+            const { user, team } = event.detail;
+            console.log(`🔐 Authenticated: ${user.name} from ${team.name}`);
+            console.log('🔐 Setting currentUser in React state...');
+            setCurrentUser(user);
         };
 
-        checkExistingSession();
+        document.addEventListener('userAuthenticated', handleUserAuthenticated);
+        
+        // Cleanup
+        return () => {
+            document.removeEventListener('userAuthenticated', handleUserAuthenticated);
+        };
     }, []);
 
     // FIXED: Enhanced debug effect to track candidates state changes and interview feedback
@@ -322,18 +283,11 @@ const loadCompanies = async () => {
 };
 // ⬆️ END OF NEW FUNCTION
 
-    // Handle user login
-const handleLogin = (user) => {
-    console.log('Login successful for:', user.name);
-    setCurrentUser(user);
-    
-    // Check for folder reconnection after successful login
-    setTimeout(() => {
-        if (window.folderCollaboration) {
-            window.folderCollaboration.checkForReconnection();
-        }
-    }, 2000); // Wait 2 seconds after login
-};
+    // Handle user login - SIMPLIFIED FOR SECURETEAMAUTH
+    const handleLogin = (user) => {
+        console.log('Login successful for:', user.name);
+        setCurrentUser(user);
+    };
 
 // Listen for the new secure auth system
 document.addEventListener('userAuthenticated', (event) => {
@@ -435,11 +389,8 @@ document.addEventListener('userAuthenticated', (event) => {
         }
     };
 
-    // Show login component when no current user
-    if (!currentUser) {
-        console.log('No current user, showing login component...');
-        return React.createElement(LoginComponent, { onLogin: handleLogin });
-    }
+    // SecureTeamAuth system handles login automatically - no need to show React LoginComponent
+    // The SecureTeamAuth system will show its own login interface when needed
 
     // Render loading screen
     if (loading) {

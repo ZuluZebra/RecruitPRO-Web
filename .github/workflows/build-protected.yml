@@ -12,79 +12,31 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
         
-    - name: Install tools
-      run: npm install -g uglify-js clean-css-cli html-minifier
-        
-    - name: Create directories
-      run: mkdir -p dist
-        
-    - name: Combine JavaScript files
+    - name: Create protected version
       run: |
-        touch combined.js
-        if [ -f public/js/secure-team-auth.js ]; then cat public/js/secure-team-auth.js >> combined.js; fi
-        if [ -f public/js/services/api.js ]; then cat public/js/services/api.js >> combined.js; fi
-        if [ -f public/js/folder-collaboration-system.js ]; then cat public/js/folder-collaboration-system.js >> combined.js; fi
-        for file in public/js/components/*.js; do
-          if [ -f "$file" ]; then cat "$file" >> combined.js; fi
-        done
-        if [ -f public/js/app.js ]; then cat public/js/app.js >> combined.js; fi
-        echo "Combined JS files created"
+        # Copy all files to dist
+        cp -r public dist
         
-    - name: Minify JavaScript
-      run: |
-        uglifyjs combined.js --mangle --compress drop_console=true,drop_debugger=true --output dist/app.min.js
-          
-    - name: Combine and minify CSS
-      run: |
-        touch combined.css
-        for file in public/css/*.css public/css/themes/*.css; do
-          if [ -f "$file" ]; then cat "$file" >> combined.css; fi
-        done
-        cleancss combined.css -o dist/styles.min.css
+        # Add basic protection to HTML
+        sed -i 's|<head>|<head><style>body{-webkit-user-select:none;-moz-user-select:none;user-select:none}</style>|' dist/index.html
         
-    - name: Create protected HTML
-      run: |
-        echo '<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>RecruitPro - Professional Recruitment CRM</title>
-            <link rel="stylesheet" href="styles.min.css">
-            <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-            <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-            <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-        </head>
-        <body>
-            <div id="root"></div>
-            <script src="app.min.js"></script>
-            <script>
-                document.addEventListener("contextmenu",e=>e.preventDefault());
-                document.addEventListener("keydown",e=>{
-                    (e.key==="F12"||e.ctrlKey&&e.shiftKey&&e.key==="I"||e.ctrlKey&&e.key==="u")&&(e.preventDefault(),alert("🔒 Developer tools disabled for security"))
-                });
-            </script>
-        </body>
-        </html>' > dist/index.html
-        
-    - name: Copy other files
-      run: |
-        if [ -f public/manifest.json ]; then cp public/manifest.json dist/; fi
-        if [ -f public/favicon.ico ]; then cp public/favicon.ico dist/; fi
+        # Add protection script before closing body tag
+        sed -i 's|</body>|<script>document.addEventListener("contextmenu",e=>e.preventDefault());document.addEventListener("keydown",e=>{if(e.key==="F12"||e.ctrlKey&&e.shiftKey&&e.key==="I"||e.ctrlKey&&e.key==="u"){e.preventDefault();alert("🔒 Developer tools disabled");}});</script></body>|' dist/index.html
         
     - name: Deploy to protected branch
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git checkout -b protected || git checkout protected
+        
+        # Remove existing files except .git
         find . -name .git -prune -o -type f -exec rm -f {} +
-        cp -r dist/* . || echo "No files to copy"
+        
+        # Copy new files
+        cp -r dist/* .
+        
+        # Commit and push
         git add .
-        git diff --staged --quiet || git commit -m "Protected build"
+        git commit -m "Protected build $(date)" || echo "No changes"
         git push origin protected --force

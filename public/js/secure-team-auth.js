@@ -205,20 +205,13 @@ class SecureTeamUserSystem {
         this.saveTeams();
         
         // Create session
-// Create session with dynamic duration based on "Remember Me"
-const rememberMe = document.getElementById('rememberMe')?.checked;
-const duration = rememberMe ? (30 * 24 * 60 * 60 * 1000) : (8 * 60 * 60 * 1000); // 30 days or 8 hours
-
-const session = {
-    userId: user.id,
-    teamCode: teamCode,
-    loginTime: new Date().toISOString(),
-    expires: Date.now() + duration,
-    rememberMe: rememberMe
-};
-localStorage.setItem('recruitpro_current_session', JSON.stringify(session));
-
-console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
+        const session = {
+            userId: user.id,
+            teamCode: teamCode,
+            loginTime: new Date().toISOString(),
+            expires: Date.now() + (24 * 60 * 60 * 1000)
+        };
+        localStorage.setItem('recruitpro_current_session', JSON.stringify(session));
         
         console.log(`✅ Login successful: ${user.name} (${team.name})`);
         this.onLoginSuccess(user);
@@ -372,32 +365,21 @@ console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
                         </div>
                         
                         <div style="margin-bottom: 24px;">
-    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
-        Password *
-    </label>
-    <input type="password" id="loginPassword" placeholder="Enter your password"
-        style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-        required>
-</div>
-
-<!-- ADD THIS REMEMBER ME SECTION -->
-<div style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-    <input type="checkbox" id="rememberMe" checked style="
-        margin: 0; width: 16px; height: 16px; cursor: pointer;
-        accent-color: #667eea;
-    ">
-    <label for="rememberMe" style="
-        font-size: 14px; color: #374151; cursor: pointer; 
-        user-select: none; display: flex; align-items: center; gap: 4px;
-    ">
-        <span>Remember me for 30 days</span>
-        <span style="font-size: 12px; color: #6b7280;">(recommended)</span>
-    </label>
-</div>
-
-<button type="submit" style="...">
-    🔐 Sign In
-</button>
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
+                                Password *
+                            </label>
+                            <input type="password" id="loginPassword" placeholder="Enter your password"
+                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
+                                required>
+                        </div>
+                        
+                        <button type="submit" style="
+                            width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white; border: none; padding: 14px; border-radius: 8px;
+                            cursor: pointer; font-size: 16px; font-weight: 600; transition: transform 0.2s;
+                        ">
+                            🔐 Sign In
+                        </button>
                     </form>
                     
                     <!-- Registration Form -->

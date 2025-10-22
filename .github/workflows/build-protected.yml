@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
     
     - name: Setup Node.js
       uses: actions/setup-node@v3
@@ -18,35 +19,43 @@ jobs:
         node-version: '18'
         
     - name: Install tools
-      run: npm install uglify-js clean-css html-minifier
+      run: npm install -g uglify-js clean-css-cli html-minifier
         
-    - name: Build protected version
+    - name: Create directories
+      run: mkdir -p dist
+        
+    - name: Combine JavaScript files
       run: |
-        mkdir -p dist
+        touch combined.js
+        if [ -f public/js/secure-team-auth.js ]; then cat public/js/secure-team-auth.js >> combined.js; fi
+        if [ -f public/js/services/api.js ]; then cat public/js/services/api.js >> combined.js; fi
+        if [ -f public/js/folder-collaboration-system.js ]; then cat public/js/folder-collaboration-system.js >> combined.js; fi
+        for file in public/js/components/*.js; do
+          if [ -f "$file" ]; then cat "$file" >> combined.js; fi
+        done
+        if [ -f public/js/app.js ]; then cat public/js/app.js >> combined.js; fi
+        echo "Combined JS files created"
         
-        # Combine JS files
-        cat public/js/secure-team-auth.js \
-            public/js/services/api.js \
-            public/js/folder-collaboration-system.js \
-            public/js/components/*.js \
-            public/js/app.js > combined.js
-            
-        # Minify with obfuscation
-        npx uglifyjs combined.js \
-          --mangle \
-          --compress drop_console=true \
-          --output dist/app.min.js
+    - name: Minify JavaScript
+      run: |
+        uglifyjs combined.js --mangle --compress drop_console=true,drop_debugger=true --output dist/app.min.js
           
-        # Minify CSS
-        cat public/css/*.css > combined.css
-        npx cleancss combined.css -o dist/styles.min.css
+    - name: Combine and minify CSS
+      run: |
+        touch combined.css
+        for file in public/css/*.css public/css/themes/*.css; do
+          if [ -f "$file" ]; then cat "$file" >> combined.css; fi
+        done
+        cleancss combined.css -o dist/styles.min.css
         
-        # Create protected HTML
+    - name: Create protected HTML
+      run: |
         echo '<!DOCTYPE html>
-        <html>
+        <html lang="en">
         <head>
             <meta charset="UTF-8">
-            <title>RecruitPro</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>RecruitPro - Professional Recruitment CRM</title>
             <link rel="stylesheet" href="styles.min.css">
             <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
             <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -58,59 +67,24 @@ jobs:
             <script>
                 document.addEventListener("contextmenu",e=>e.preventDefault());
                 document.addEventListener("keydown",e=>{
-                    (e.key==="F12"||e.ctrlKey&&e.shiftKey&&e.key==="I")&&(e.preventDefault(),alert("Dev tools disabled"))
+                    (e.key==="F12"||e.ctrlKey&&e.shiftKey&&e.key==="I"||e.ctrlKey&&e.key==="u")&&(e.preventDefault(),alert("🔒 Developer tools disabled for security"))
                 });
             </script>
         </body>
         </html>' > dist/index.html
+        
+    - name: Copy other files
+      run: |
+        if [ -f public/manifest.json ]; then cp public/manifest.json dist/; fi
+        if [ -f public/favicon.ico ]; then cp public/favicon.ico dist/; fi
         
     - name: Deploy to protected branch
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git checkout -b protected || git checkout protected
-        rm -rf *
-        cp -r dist/* .
+        find . -name .git -prune -o -type f -exec rm -f {} +
+        cp -r dist/* . || echo "No files to copy"
         git add .
-        git commit -m "Protected build" || echo "No changes"
+        git diff --staged --quiet || git commit -m "Protected build"
         git push origin protected --force
-```
-
-### **🎯 STEP 2: Configure Vercel for Protected Branch**
-
-1. **Go to your Vercel dashboard**
-2. **Find your RecruitPro project**
-3. **Click Settings > Git**
-4. **Change "Production Branch" from `main` to `protected`**
-
-### **🎯 STEP 3: Trigger the Protection**
-
-1. **Go back to your GitHub repo**
-2. **Make any small change** (add a space somewhere)
-3. **Commit and push to main branch**
-4. **GitHub Action will automatically:**
-   - Minify your code
-   - Create protected version
-   - Push to `protected` branch
-   - Vercel deploys the protected version
-
-### **🎯 STEP 4: Verify Protection**
-
-1. **Check your Vercel URL** (your live site)
-2. **Press F12** - should be blocked
-3. **Right-click** - should be disabled
-4. **View source** - code should look like: `var a=function(b){c(b)}`
-
-### **🔄 How It Works:**
-```
-Your Code (main branch) 
-    ↓ 
-GitHub Action runs 
-    ↓ 
-Creates minified/protected version 
-    ↓ 
-Pushes to "protected" branch 
-    ↓ 
-Vercel deploys protected branch 
-    ↓ 
-Your live site is protected!

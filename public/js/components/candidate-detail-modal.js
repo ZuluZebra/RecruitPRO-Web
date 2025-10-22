@@ -2839,27 +2839,29 @@ const AddCandidateModal = ({
         });
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        
-        const timestamp = new Date().toISOString();
-        const candidateData = {
-            ...formData,
-            status: 'new',
-            readiness: 'not_ready',
-            created_by: currentUser.name,
-            interview_feedback: [], // Initialize empty feedback array
-            timeline: [
-                {
-                    id: 1,
-                    action: 'Candidate Created',
-                    description: 'Initial candidate record created',
-                    user: currentUser.name,
-                    timestamp: timestamp,
-                    type: 'created'
-                }
-            ]
-        };
+    const candidateData = {
+    ...formData,
+    status: 'new',
+    readiness: 'not_ready',
+    created_by: currentUser.name,
+    interview_feedback: [], // Initialize empty feedback array
+    timeline: [
+        {
+            id: 1,
+            action: 'Candidate Created',
+            description: 'Initial candidate record created',
+            user: currentUser.name,
+            timestamp: timestamp,
+            type: 'created'
+        }
+    ],
+    // ADD PRIVACY FIELDS FOR NEW CANDIDATES
+    visibility: 'public',  // Public by default for candidates
+    isConfidential: false,
+    sharedWith: [],
+    privacyUpdatedAt: timestamp,
+    privacyUpdatedBy: currentUser.id
+};
 
         try {
             const result = await api.createCandidate(candidateData);

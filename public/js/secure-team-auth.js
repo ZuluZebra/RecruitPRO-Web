@@ -302,8 +302,10 @@ console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
         document.querySelectorAll('#secureAuthContainer, .login-container').forEach(el => el.remove());
         
         document.body.appendChild(authContainer);
-        this.setupAuthEventListeners();
-    }
+        // Fixed code - add delay to ensure DOM is ready
+setTimeout(() => {
+    this.setupAuthEventListeners();
+}, 50);
 
     getAuthHTML() {
         return `
@@ -395,7 +397,7 @@ console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
     </label>
 </div>
 
-<button type="submit" style="...">
+<button type="submit" style="width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; transition: transform 0.2s;">
     🔐 Sign In
 </button>
                     </form>
@@ -550,42 +552,55 @@ console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
     }
 
     setupAuthEventListeners() {
-        // Tab switching
-        document.querySelectorAll('.auth-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Update tabs
-                document.querySelectorAll('.auth-tab').forEach(t => {
-                    t.classList.remove('active');
-                    t.style.background = 'transparent';
-                    t.style.color = '#64748b';
-                    t.style.boxShadow = 'none';
-                });
-                
-                tab.classList.add('active');
-                tab.style.background = 'white';
-                tab.style.color = '#374151';
-                tab.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                
-                // Update forms
-                document.querySelectorAll('.auth-form').forEach(form => {
-                    form.style.display = 'none';
-                });
-                document.getElementById(tab.dataset.tab + 'Form').style.display = 'block';
-                
-                this.clearMessages();
+    // Tab switching
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Update tabs
+            document.querySelectorAll('.auth-tab').forEach(t => {
+                t.classList.remove('active');
+                t.style.background = 'transparent';
+                t.style.color = '#64748b';
+                t.style.boxShadow = 'none';
             });
+            
+            tab.classList.add('active');
+            tab.style.background = 'white';
+            tab.style.color = '#374151';
+            tab.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+            
+            // Update forms
+            document.querySelectorAll('.auth-form').forEach(form => {
+                form.style.display = 'none';
+            });
+            document.getElementById(tab.dataset.tab + 'Form').style.display = 'block';
+            
+            this.clearMessages();
         });
+    });
 
-        // Form submissions
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+    // Form submissions - ADD ERROR CHECKING
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        console.log('✅ Login form found, adding event listener');
+        loginForm.addEventListener('submit', (e) => {
+            console.log('🔍 Form submit event triggered');
             e.preventDefault();
+            e.stopPropagation();
             const teamCode = document.getElementById('loginTeamCode').value;
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
+            console.log('📝 Form data:', { teamCode, email, password: '***' });
             this.handleLogin(teamCode, email, password);
+            return false;
         });
+    } else {
+        console.error('❌ Login form not found!');
+    }
 
-        document.getElementById('registerForm').addEventListener('submit', (e) => {
+    // Rest of your event listeners...
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = {
                 teamCode: document.getElementById('regTeamCode').value,
@@ -598,12 +613,16 @@ console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
             };
             this.handleRegistration(formData);
         });
+    }
 
-        document.getElementById('createForm').addEventListener('submit', (e) => {
+    const createForm = document.getElementById('createForm');
+    if (createForm) {
+        createForm.addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleCreateTeam();
         });
     }
+}
 
     async handleCreateTeam() {
         this.clearMessages();

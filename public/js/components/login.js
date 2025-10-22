@@ -99,13 +99,19 @@ const LoginComponent = ({ onLogin }) => {
             const updatedSessions = [newSession, ...sessions.slice(0, 49)];
             helpers.storage.save('recruitpro_login_sessions', updatedSessions);
             
-            // Create session for multi-user auth
-            const session = {
-                userId: user.id,
-                loginTime: new Date().toISOString(),
-                expires: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-            };
-            localStorage.setItem('recruitpro_current_session', JSON.stringify(session));
+            // Create session for multi-user auth with Remember Me support
+const rememberMe = document.getElementById('rememberMe')?.checked || false;
+const duration = rememberMe ? (30 * 24 * 60 * 60 * 1000) : (8 * 60 * 60 * 1000); // 30 days or 8 hours
+
+const session = {
+    userId: user.id,
+    loginTime: new Date().toISOString(),
+    expires: Date.now() + duration,
+    rememberMe: rememberMe
+};
+localStorage.setItem('recruitpro_current_session', JSON.stringify(session));
+
+console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
             
             onLogin(user);
         } else {
@@ -426,6 +432,47 @@ const LoginComponent = ({ onLogin }) => {
                     onKeyPress={handleKeyPress}
                     disabled={isLoading}
                 />
+
+                        {/* Remember Me Checkbox */}
+<div style={{
+    marginBottom: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+}}>
+    <input 
+        type="checkbox" 
+        id="rememberMe" 
+        defaultChecked={true}
+        style={{
+            margin: '0',
+            width: '16px',
+            height: '16px',
+            cursor: 'pointer',
+            accentColor: 'var(--accent-color)'
+        }}
+    />
+    <label 
+        htmlFor="rememberMe" 
+        style={{
+            fontSize: '14px',
+            color: 'var(--text-primary)',
+            cursor: 'pointer',
+            userSelect: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+        }}
+    >
+        <span>Remember me for 30 days</span>
+        <span style={{
+            fontSize: '12px',
+            color: 'var(--text-muted)'
+        }}>
+            (recommended)
+        </span>
+    </label>
+</div>
                 
                 <button 
                     className="login-button"

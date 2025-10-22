@@ -27,6 +27,39 @@ const RecruitProApp = () => {
         helpers.themeManager.init();
     }, []);
 
+    // Check for existing session on app start
+    React.useEffect(() => {
+        const checkExistingSession = () => {
+            const session = localStorage.getItem('recruitpro_current_session');
+            if (session) {
+                try {
+                    const sessionData = JSON.parse(session);
+                    
+                    // Check if session is still valid
+                    if (sessionData.expires > Date.now()) {
+                        const users = JSON.parse(localStorage.getItem('recruitpro_registered_users') || '[]');
+                        const user = users.find(u => u.id === sessionData.userId);
+                        
+                        if (user) {
+                            console.log(`🔐 Restored session for ${user.name}`);
+                            setCurrentUser(user);
+                            return;
+                        }
+                    } else {
+                        console.log('🔐 Session expired, removing...');
+                        localStorage.removeItem('recruitpro_current_session');
+                    }
+                } catch (error) {
+                    console.error('Error parsing session:', error);
+                    localStorage.removeItem('recruitpro_current_session');
+                }
+            }
+            console.log('🔐 No valid session found');
+        };
+
+        checkExistingSession();
+    }, []);
+
     // FIXED: Enhanced debug effect to track candidates state changes and interview feedback
     React.useEffect(() => {
         console.log('📊 App - Candidates state updated:', candidates.length, 'candidates');
@@ -170,19 +203,21 @@ loadWarmCandidates();
                 );
                 
                 console.log('✅ Loaded candidates:', result.data.length);
-                console.log('🎤 Candidates with interview feedback:', candidatesWithFeedback.length);
+                console.log('✅ Candidates with feedback:', candidatesWithFeedback.length);
                 
+                // Log feedback details for verification
                 candidatesWithFeedback.forEach(c => {
-                    console.log(`  📝 ${c.name}: ${c.interview_feedback.length} feedback entries`);
-                    c.interview_feedback.forEach((feedback, index) => {
-                        console.log(`    - Feedback ${index + 1}: ${feedback.feedback?.rating}/10 (${feedback.sentiment})`);
-                    });
+                    console.log(`📝 ${c.name}: ${c.interview_feedback.length} feedback entries`);
                 });
                 
                 setCandidates(result.data);
             }
         } catch (error) {
             console.error('Error loading candidates:', error);
+            // Fallback to localStorage
+            const fallbackCandidates = helpers.storage.load('recruitpro_candidates') || [];
+            console.log(`📱 Fallback: ${fallbackCandidates.length} candidates from localStorage`);
+            setCandidates(fallbackCandidates);
         }
     };
 
@@ -191,10 +226,14 @@ loadWarmCandidates();
             const result = await api.getProjects();
             if (result.data) {
                 setProjects(result.data);
-                console.log('✅ Loaded projects:', result.data.length);
+                console.log(`📊 Loaded ${result.data.length} projects`);
             }
         } catch (error) {
             console.error('Error loading projects:', error);
+            // Fallback to localStorage
+            const fallbackProjects = helpers.storage.load('recruitpro_projects') || [];
+            setProjects(fallbackProjects);
+            console.log(`📱 Fallback: ${fallbackProjects.length} projects from localStorage`);
         }
     };
 
@@ -203,10 +242,14 @@ loadWarmCandidates();
             const result = await api.getInterviews();
             if (result.data) {
                 setInterviews(result.data);
-                console.log('✅ Loaded interviews:', result.data.length);
+                console.log(`📅 Loaded ${result.data.length} interviews`);
             }
         } catch (error) {
             console.error('Error loading interviews:', error);
+            // Fallback to localStorage
+            const fallbackInterviews = helpers.storage.load('recruitpro_interviews') || [];
+            setInterviews(fallbackInterviews);
+            console.log(`📱 Fallback: ${fallbackInterviews.length} interviews from localStorage`);
         }
     };
 
@@ -215,10 +258,14 @@ loadWarmCandidates();
             const result = await api.getInterviewTemplates();
             if (result.data) {
                 setInterviewTemplates(result.data);
-                console.log('✅ Loaded interview templates:', result.data.length);
+                console.log(`📋 Loaded ${result.data.length} interview templates`);
             }
         } catch (error) {
             console.error('Error loading interview templates:', error);
+            // Fallback to localStorage
+            const fallbackTemplates = helpers.storage.load('recruitpro_interview_templates') || [];
+            setInterviewTemplates(fallbackTemplates);
+            console.log(`📱 Fallback: ${fallbackTemplates.length} templates from localStorage`);
         }
     };
 
@@ -254,7 +301,7 @@ const loadCompanies = async () => {
 
     // Handle user login
 const handleLogin = (user) => {
-    console.log('Login successful');
+    console.log('Login successful for:', user.name);
     setCurrentUser(user);
     
     // Check for folder reconnection after successful login
@@ -273,26 +320,26 @@ document.addEventListener('userAuthenticated', (event) => {
 });
 
     // Handle user logout
-const handleLogout = () => {
-    setCurrentUser(null);
-    setActiveTab('candidates');
-    
-    // Clear any open modals
-    setShowInterviewModal(false);
-    setPreSelectedCandidate(null);
-    
-    // Use the proper logout function instead of problematic reload
-    if (window.secureTeamAuth) {
-        window.secureTeamAuth.logout();
-    } else if (window.multiUserAuth) {
-        // Clear session and show auth interface properly
-        localStorage.removeItem('recruitpro_current_session');
-        window.multiUserAuth.showAuthInterface();
-    } else {
-        // Fallback: reload page
-        window.location.reload();
-    }
-};
+    const handleLogout = () => {
+        setCurrentUser(null);
+        setActiveTab('candidates');
+        
+        // Clear any open modals
+        setShowInterviewModal(false);
+        setPreSelectedCandidate(null);
+        
+        // Use the proper logout function instead of problematic reload
+        if (window.secureTeamAuth) {
+            window.secureTeamAuth.logout();
+        } else if (window.multiUserAuth) {
+            // Clear session and show auth interface properly
+            localStorage.removeItem('recruitpro_current_session');
+            window.multiUserAuth.showAuthInterface();
+        } else {
+            // Fallback: reload page
+            window.location.reload();
+        }
+    };
 
     // Handle scheduling interview from candidate card
     const handleScheduleInterview = (candidate) => {
@@ -303,115 +350,73 @@ const handleLogout = () => {
 
     // Handle viewing candidate details
     const handleViewCandidate = (candidate) => {
-        // Switch to candidates tab and trigger candidate view
+        // Switch to candidates tab and scroll to candidate (implement as needed)
         setActiveTab('candidates');
-        // You could implement additional logic here to focus on specific candidate
-        // For now, switching to candidates tab is sufficient
     };
 
-    // Handle keeping candidates warm - NEW FUNCTION
-const handleKeepWarm = (candidateId) => {
-    const candidate = candidates.find(c => c.id === candidateId);
-    if (candidate) {
-        // Add timestamp when moved to warm with attribution
-const baseWarmCandidate = {
-    ...candidate,
-    movedToWarmDate: new Date().toISOString(),
-    lastContact: new Date().toISOString(),
-    warmStatus: 'fresh'
-};
-const warmCandidate = window.updateUserAttribution(baseWarmCandidate);
-
-// Move to warm pipeline
-const updatedWarmCandidates = [warmCandidate, ...warmCandidates];
-setWarmCandidates(updatedWarmCandidates);
-helpers.storage.save('recruitpro_warm_candidates', updatedWarmCandidates);
-        
-        // Remove from active candidates
-        const updatedActiveCandidates = candidates.filter(c => c.id !== candidateId);
-        setCandidates(updatedActiveCandidates);
-        helpers.storage.save('recruitpro_candidates', updatedActiveCandidates); // ADD THIS LINE
-        
-        console.log(`✅ Moved ${candidate.name} to warm pipeline`);
-    }
-};
-
-    // FIXED: Enhanced function to force refresh candidate data after interview feedback
-    const refreshCandidateData = async () => {
-        console.log('🔄 Force refreshing candidate data after interview feedback...');
-        try {
-            const result = await api.getCandidates();
-            if (result.data) {
-                setCandidates(result.data);
-                console.log('✅ Candidate data refreshed successfully');
-                
-                // Verify feedback was updated
-                const candidatesWithFeedback = result.data.filter(c => 
-                    c.interview_feedback && c.interview_feedback.length > 0
-                );
-                console.log(`📊 After refresh: ${candidatesWithFeedback.length} candidates have feedback`);
-            }
-        } catch (error) {
-            console.error('Error refreshing candidate data:', error);
-        }
-    };
-
-    // FIXED: Enhanced interview scheduling with proper state updates
+    // FIXED: Interview scheduling with enhanced feedback support
     const handleInterviewSchedule = async (interviewData) => {
         try {
-            const result = await api.createInterview({
-                ...interviewData,
-                scheduled_by: currentUser.name
-            });
+            console.log('📅 Scheduling interview:', interviewData);
             
-            if (result.data) {
-                // Update interviews state
-                setInterviews([result.data, ...interviews]);
+            // Save to API first
+            const result = await api.createInterview(interviewData);
+            
+            if (result.success) {
+                // Update local state
+                setInterviews(prev => [interviewData, ...prev]);
                 
-                // FIXED: Update candidate timeline with proper ID handling
-                const candidateId = interviewData.candidate_id;
-                const updatedCandidates = candidates.map(candidate => {
-                    if (candidate.id == candidateId || candidate.id === candidateId) {
-                        const timelineEntry = {
-                            id: Date.now() + Math.random(),
-                            action: 'Interview Scheduled',
-                            description: `${interviewData.template_name} scheduled for ${new Date(interviewData.interview_date).toLocaleDateString()}`,
-                            user: currentUser.name,
-                            timestamp: new Date().toISOString(),
-                            type: 'interview'
-                        };
-                        
-                        const timeline = candidate.timeline || [];
-                        const updatedCandidate = {
-                            ...candidate,
-                            timeline: [timelineEntry, ...timeline]
-                        };
-                        
-                        // Update in database
-                        api.updateCandidate(candidate.id, { timeline: updatedCandidate.timeline });
-                        
-                        return updatedCandidate;
-                    }
-                    return candidate;
-                });
-                
-                setCandidates(updatedCandidates);
-                setShowInterviewModal(false);
-                setPreSelectedCandidate(null);
+                // Update candidate timeline if candidate is provided
+                if (interviewData.candidate_id) {
+                    setCandidates(prev => prev.map(candidate => {
+                        if (candidate.id === interviewData.candidate_id) {
+                            const updatedCandidate = {
+                                ...candidate,
+                                timeline: [
+                                    {
+                                        id: Date.now(),
+                                        type: 'interview_scheduled',
+                                        message: `Interview scheduled with ${interviewData.interviewer_name}`,
+                                        user: currentUser.name,
+                                        created_at: new Date().toISOString()
+                                    },
+                                    ...(candidate.timeline || [])
+                                ]
+                            };
+                            
+                            // Also save updated candidate to storage
+                            setTimeout(() => {
+                                const allCandidates = helpers.storage.load('recruitpro_candidates') || [];
+                                const candidateIndex = allCandidates.findIndex(c => c.id === candidate.id);
+                                if (candidateIndex >= 0) {
+                                    allCandidates[candidateIndex] = updatedCandidate;
+                                    helpers.storage.save('recruitpro_candidates', allCandidates);
+                                }
+                            }, 100);
+                            
+                            return updatedCandidate;
+                        }
+                        return candidate;
+                    }));
+                }
                 
                 console.log('✅ Interview scheduled successfully');
+                
+            } else {
+                console.error('❌ Failed to schedule interview');
+                alert('Failed to schedule interview. Please try again.');
             }
         } catch (error) {
-            console.error('Error scheduling interview:', error);
+            console.error('❌ Error scheduling interview:', error);
             alert('Error scheduling interview. Please try again.');
         }
     };
 
     // Show login component when no current user
-if (!currentUser) {
-    console.log('Waiting for secure authentication...');
-    return React.createElement(LoginComponent, { onLogin: handleLogin });
-}
+    if (!currentUser) {
+        console.log('No current user, showing login component...');
+        return React.createElement(LoginComponent, { onLogin: handleLogin });
+    }
 
     // Render loading screen
     if (loading) {
@@ -436,111 +441,104 @@ if (!currentUser) {
                     }} />
                     <h3 style={{ marginBottom: '10px' }}>Loading RecruitPro...</h3>
                     <p style={{ color: 'var(--text-tertiary)' }}>
-                        {isOnline ? 'Syncing with database...' : 'Initializing offline mode...'}
+                        {isOnline ? 'Connected to server' : 'Working offline with demo data'}
                     </p>
                 </div>
-                <style>
-                    {`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}
-                </style>
             </div>
         );
     }
 
-    // Main application render
-    console.log('Rendering main application');
-    
+    const tabs = [
+        { id: 'candidates', label: '👥 Candidates' },
+        { id: 'projects', label: '📋 Projects' },
+        { id: 'companies', label: '🏢 Companies' },
+        { id: 'interviews', label: '📅 Interviews' },
+        { id: 'organogram', label: '🌳 Organogram' },
+        { id: 'warm-pipeline', label: '🔥 Warm Pipeline' },
+        { id: 'analytics', label: '📊 Analytics' }
+    ];
+
     return (
         <DashboardComponent
             currentUser={currentUser}
-            onLogout={handleLogout}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
-            isOnline={isOnline}
+            onLogout={handleLogout}
+            tabs={tabs}
+            loginSessions={loginSessions}
         >
-            {/* Render active tab content */}
+            {/* Candidates Tab */}
             {activeTab === 'candidates' && (
-    <CandidatesComponent
-        currentUser={currentUser}
-        candidates={candidates}
-        setCandidates={setCandidates}
-        projects={projects}
-        onScheduleInterview={handleScheduleInterview}
-        onKeepWarm={handleKeepWarm}  // ADD THIS LINE
-    />
-)}
-
-            {activeTab === 'analytics' && (
-                <AnalyticsComponent
-                    candidates={candidates}
-                    interviews={interviews}
-                    projects={projects}
-                    loginSessions={loginSessions}
-                    onViewCandidate={handleViewCandidate}
-                />
-            )}
-
-            {activeTab === 'interviews' && (
-                <InterviewsComponent
+                <CandidatesComponent
                     currentUser={currentUser}
                     candidates={candidates}
                     setCandidates={setCandidates}
-                    interviews={interviews}
-                    setInterviews={setInterviews}
-                    interviewTemplates={interviewTemplates}
-                    setInterviewTemplates={setInterviewTemplates}
                     projects={projects}
+                    interviews={interviews}
+                    onScheduleInterview={handleScheduleInterview}
                     onViewCandidate={handleViewCandidate}
                 />
             )}
 
-{activeTab === 'projects' && (
-    <ProjectsComponent
-        currentUser={currentUser}
-        projects={projects}
-        setProjects={setProjects}
-        candidates={candidates}
-        setCandidates={setCandidates}
-        interviews={interviews}
-        setInterviews={setInterviews}
-        onScheduleInterview={handleScheduleInterview}
-        onViewCandidate={handleViewCandidate}
-    />
-)}
+            {/* Projects Tab */}
+            {activeTab === 'projects' && (
+                <ProjectsComponent
+                    currentUser={currentUser}
+                    projects={projects}
+                    setProjects={setProjects}
+                    candidates={candidates}
+                />
+            )}
 
+{/* Companies Tab */}
 {activeTab === 'companies' && (
     <CompaniesComponent
         currentUser={currentUser}
-        candidates={candidates}
-        setCandidates={setCandidates}
         companies={companies}
         setCompanies={setCompanies}
     />
 )}
 
-{/* ADD THIS NEW SECTION */}
-{activeTab === 'hiring-info' && (
-    <HiringInfoTab
-        currentUser={currentUser}
-        isOnline={isOnline}
-    />
-)}
+            {/* Interviews Tab */}
+            {activeTab === 'interviews' && (
+                <InterviewsComponent
+                    currentUser={currentUser}
+                    interviews={interviews}
+                    setInterviews={setInterviews}
+                    candidates={candidates}
+                    setCandidates={setCandidates}
+                    interviewTemplates={interviewTemplates}
+                    setInterviewTemplates={setInterviewTemplates}
+                    projects={projects}
+                />
+            )}
 
-{/* ADD THIS NEW SECTION */}
+            {/* Analytics Tab */}
+            {activeTab === 'analytics' && (
+                <AnalyticsComponent
+                    candidates={candidates}
+                    projects={projects}
+                    interviews={interviews}
+                    currentUser={currentUser}
+                />
+            )}
+
+{/* Organogram Tab */}
 {activeTab === 'organogram' && (
-    window.InteractiveOrganogram ? 
-        React.createElement(window.InteractiveOrganogram, {
-            currentUser: currentUser,
-            isOnline: isOnline
+    window.OrganogramComponent ? 
+        React.createElement(window.OrganogramComponent, {
+            currentUser: currentUser
         }) :
-        React.createElement('div', { 
-            style: { 
-                padding: '40px', 
-                textAlign: 'center',
-                background: 'rgba(255,255,255,0.9)',
-                borderRadius: '12px',
-                margin: '20px'
-            } 
-        }, 
+        React.createElement('div', 
+            { 
+                style: { 
+                    textAlign: 'center', 
+                    padding: '40px', 
+                    background: 'var(--card-bg)', 
+                    borderRadius: '12px',
+                    margin: '20px'
+                } 
+            }, 
             React.createElement('h3', null, '🏢 Organogram Loading...'),
             React.createElement('p', null, 'The organogram component is being loaded. Please refresh if this persists.')
         )

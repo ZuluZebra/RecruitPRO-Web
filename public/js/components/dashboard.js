@@ -288,6 +288,9 @@ const [notesLoading, setNotesLoading] = React.useState(false);
     const [projects, setProjects] = React.useState([]);
     const [candidates, setCandidates] = React.useState([]);
 
+    // ✅ ADD THIS LINE RIGHT HERE:
+const [companies, setCompanies] = React.useState([]);
+
     React.useEffect(() => {
         if (currentUser) {
             initializeDashboardData();

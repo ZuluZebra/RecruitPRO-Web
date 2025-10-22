@@ -407,10 +407,10 @@ helpers.storage.save('recruitpro_warm_candidates', updatedWarmCandidates);
         }
     };
 
-    // The secure team auth system handles login automatically
+    // Show login component when no current user
 if (!currentUser) {
     console.log('Waiting for secure authentication...');
-    return null; // Secure auth system will show login interface
+    return React.createElement(LoginComponent, { onLogin: handleLogin });
 }
 
     // Render loading screen

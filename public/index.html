@@ -48,134 +48,39 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        .ai-confidence-bar {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            height: 6px;
-            overflow: hidden;
-        }
-        
-        .ai-confidence-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #0abde3);
-            border-radius: 10px;
-            transition: width 0.8s ease;
-        }
-        
-        .ai-tag {
-            background: rgba(255, 255, 255, 0.2);
+        .ai-status-badge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
             font-size: 11px;
             font-weight: 600;
-            display: inline-block;
-            margin: 2px;
-        }
-        
-        .ai-processing {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            font-size: 12px;
-            color: var(--accent-color);
+            gap: 4px;
         }
         
-        .ai-processing::after {
-            content: "⚡";
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .smart-notes-preview {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-size: 13px;
-        }
-        
-        .ai-action-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .ai-priority-badge {
-            padding: 2px 6px;
-            border-radius: 8px;
+        .ai-status-badge::before {
+            content: "🤖";
             font-size: 10px;
-            font-weight: 600;
-        }
-        
-        .ai-priority-high { background: #ff6b6b; }
-        .ai-priority-medium { background: #ffa726; }
-        .ai-priority-low { background: #66bb6a; }
-        
-        .realtime-insights-banner {
-            background: rgba(72, 187, 120, 0.1);
-            border: 1px solid rgba(72, 187, 120, 0.3);
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            animation: slideInFromTop 0.5s ease-out;
-        }
-        
-        @keyframes slideInFromTop {
-            0% {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
         
         .ai-analysis-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
         }
         
-        .ai-metric-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 6px;
+        .smart-notes-preview {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
         }
         
-        .ai-metric-bar {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            height: 6px;
-            overflow: hidden;
-            margin-top: 4px;
-        }
-        
-        .ai-metric-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.8s ease;
-        }
-        
-        .ai-recommendation-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-        
-        .ai-button-primary {
+        .ai-button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -185,9 +90,12 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
         
-        .ai-button-primary:hover {
+        .ai-button:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
@@ -246,7 +154,7 @@
 <body>
     <div id="root"></div>
 
-        <!-- 🆕 ADD THIS NEW LINE HERE -->
+    <!-- 🆕 SINGLE AUTHENTICATION SYSTEM - Keep only this one -->
     <script src="js/recruitpro-multi-user-auth.js"></script>
     
     <!-- Utilities -->
@@ -260,14 +168,15 @@
     <script src="js/services/api.js"></script>
     <script src="js/folder-collaboration-system.js"></script>
     
-  <!-- Components -->
-    <script src="js/secure-team-auth.js"></script>
-<script type="text/babel" src="js/components/login.js"></script>
+    <!-- Components - REMOVED CONFLICTING AUTH SYSTEMS -->
+    <!-- REMOVED: js/secure-team-auth.js -->
+    <!-- REMOVED: js/components/login.js -->
+    
 <script type="text/babel" src="js/components/dashboard.js"></script>
 <script type="text/babel" src="js/components/candidates.js"></script>
 <script type="text/babel" src="js/components/candidate-detail-modal.js"></script>
 <script type="text/babel" src="js/components/projects.js"></script>
-<script type="text/babel" src="js/components/companies.js"></script>  <!-- ADD THIS LINE -->
+<script type="text/babel" src="js/components/companies.js"></script>
 <script type="text/babel" src="js/components/interviews.js"></script>
 <script type="text/babel" src="js/components/analytics.js"></script>
 <script type="text/babel" src="js/components/hiring-info.js"></script>

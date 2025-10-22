@@ -300,53 +300,5 @@
             }, 1000);
         });
     </script>
-    <script>
-// 🔒 MINIMAL PROTECTION - Allows Normal Typing
-(function() {
-    'use strict';
-    
-    // Disable right-click only
-    document.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-        alert('🔒 Right-click disabled for security.');
-        return false;
-    });
-    
-    // Block ONLY dev tool shortcuts
-    document.addEventListener('keydown', function(e) {
-        // Block F12
-        if (e.key === 'F12') {
-            e.preventDefault();
-            alert('🔒 Developer tools disabled.');
-            return false;
-        }
-        
-        // Block Ctrl+Shift+I (inspect)
-        if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-            e.preventDefault();
-            alert('🔒 Developer tools disabled.');
-            return false;
-        }
-        
-        // Block Ctrl+U (view source)
-        if (e.ctrlKey && e.key === 'u') {
-            e.preventDefault();
-            alert('🔒 View source disabled.');
-            return false;
-        }
-        
-        // Allow ALL other keys (typing, etc.)
-        return true;
-    });
-    
-    // Simple dev tools detection
-    setInterval(function() {
-        if (window.outerHeight - window.innerHeight > 200) {
-            alert('🚨 Please close developer tools to continue.');
-        }
-    }, 3000);
-    
-})();
-</script>
 </body>
 </html>

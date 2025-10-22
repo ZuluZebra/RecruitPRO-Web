@@ -16,13 +16,98 @@ jobs:
     - name: Create protected version
       run: |
         # Copy all files to dist
-        cp -r public dist
+        mkdir -p dist
+        cp -r public/* dist/
         
-        # Add basic protection to HTML
-        sed -i 's|<head>|<head><style>body{-webkit-user-select:none;-moz-user-select:none;user-select:none}</style>|' dist/index.html
-        
-        # Add protection script before closing body tag
-        sed -i 's|</body>|<script>document.addEventListener("contextmenu",e=>e.preventDefault());document.addEventListener("keydown",e=>{if(e.key==="F12"||e.ctrlKey&&e.shiftKey&&e.key==="I"||e.ctrlKey&&e.key==="u"){e.preventDefault();alert("🔒 Developer tools disabled");}});</script></body>|' dist/index.html
+    - name: Create protected HTML
+      run: |
+        # Create the protected index.html from scratch
+        cat > dist/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>RecruitPro - Professional Recruitment CRM</title>
+            <link rel="stylesheet" href="css/styles.css">
+            <link rel="stylesheet" href="css/themes/dark.css">
+            <link rel="stylesheet" href="css/themes/light.css">
+            <link rel="manifest" href="manifest.json">
+            <link rel="icon" type="image/x-icon" href="favicon.ico">
+            <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+            <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+            <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+            <style>
+                body { 
+                    -webkit-user-select: none; 
+                    -moz-user-select: none; 
+                    -ms-user-select: none; 
+                    user-select: none; 
+                }
+            </style>
+        </head>
+        <body>
+            <div id="root"></div>
+            
+            <!-- Core Scripts -->
+            <script src="js/secure-team-auth.js"></script>
+            <script src="js/services/api.js"></script>
+            <script src="js/folder-collaboration-system.js"></script>
+            
+            <!-- Components -->
+            <script type="text/babel" src="js/components/dashboard.js"></script>
+            <script type="text/babel" src="js/components/candidates.js"></script>
+            <script type="text/babel" src="js/components/candidate-detail-modal.js"></script>
+            <script type="text/babel" src="js/components/projects.js"></script>
+            <script type="text/babel" src="js/components/companies.js"></script>
+            <script type="text/babel" src="js/components/interviews.js"></script>
+            <script type="text/babel" src="js/components/analytics.js"></script>
+            <script type="text/babel" src="js/components/hiring-info.js"></script>
+            <script type="text/babel" src="js/components/organogram.js"></script>
+            <script type="text/babel" src="js/components/warm-pipeline.js"></script>
+            <script type="text/babel" src="js/components/RichTextEditor.js"></script>
+            <script type="text/babel" src="js/components/InteractiveSkillsAssessment.js"></script>
+            <script type="text/babel" src="js/components/recruitment-chatbot.js"></script>
+            
+            <!-- Main App -->
+            <script type="text/babel" src="js/app.js"></script>
+            
+            <!-- Protection Script -->
+            <script>
+                // Disable right-click
+                document.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    return false;
+                });
+                
+                // Disable F12, Ctrl+Shift+I, Ctrl+U
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'F12' || 
+                        (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                        (e.ctrlKey && e.shiftKey && e.key === 'C') ||
+                        (e.ctrlKey && e.key === 'u')) {
+                        e.preventDefault();
+                        alert('🔒 Developer tools are disabled for security reasons.');
+                        return false;
+                    }
+                });
+                
+                // Basic dev tools detection
+                let devtools = {open: false};
+                const threshold = 160;
+                setInterval(function() {
+                    if (window.outerHeight - window.innerHeight > threshold || 
+                        window.outerWidth - window.innerWidth > threshold) {
+                        if (!devtools.open) {
+                            devtools.open = true;
+                            document.body.innerHTML = '<div style="text-align:center;padding:50px;"><h1>🔒 Developer Tools Detected</h1><p>Access denied for security reasons.</p></div>';
+                        }
+                    }
+                }, 1000);
+            </script>
+        </body>
+        </html>
+        EOF
         
     - name: Deploy to protected branch
       run: |
@@ -30,8 +115,8 @@ jobs:
         git config --local user.name "GitHub Action"
         git checkout -b protected || git checkout protected
         
-        # Remove existing files except .git
-        find . -name .git -prune -o -type f -exec rm -f {} +
+        # Remove existing files except .git and .github
+        find . -name .git -prune -o -name .github -prune -o -type f -exec rm -f {} +
         
         # Copy new files
         cp -r dist/* .

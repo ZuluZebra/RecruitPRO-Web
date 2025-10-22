@@ -1,5 +1,5 @@
 /*
-🔐 SECURE TEAM-BASED REGISTRATION SYSTEM
+🔐 SECURE TEAM-BASED REGISTRATION SYSTEM (UPDATED)
 =======================================
 
 This creates isolated user groups per company/team with:
@@ -7,6 +7,7 @@ This creates isolated user groups per company/team with:
 - Company-isolated user lists
 - Secure team management
 - Future subscription model ready
+- ✅ ADDED: User attribution functions for candidates/projects
 
 FEATURES:
 ✅ Team codes for secure registration
@@ -15,9 +16,7 @@ FEATURES:
 ✅ Invitation system
 ✅ Privacy protection
 ✅ Subscription model ready
-
-IMPLEMENTATION:
-Replace your existing user registration system
+✅ User attribution for records
 */
 
 class SecureTeamUserSystem {
@@ -63,7 +62,7 @@ class SecureTeamUserSystem {
                         name: 'Chris van der Merwe',
                         email: 'chris@sap.com',
                         role: 'owner',
-                        password: 'NextGen',
+                        password: 'NextGen', // Existing password
                         isOwner: true,
                         teamCode: defaultTeamCode,
                         created: new Date().toISOString(),
@@ -81,7 +80,7 @@ class SecureTeamUserSystem {
                 }
             };
             this.saveTeams();
-            console.log(`👑 Initialized default team with code: ${defaultTeamCode}`);
+            console.log(`👑 Initialized with default team: ${defaultTeamCode}`);
         }
     }
 
@@ -90,8 +89,8 @@ class SecureTeamUserSystem {
     }
 
     generateTeamCode() {
-        // Generate secure 8-character team code
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        // Generate 8-character alphanumeric code
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Remove confusing chars
         let result = '';
         for (let i = 0; i < 8; i++) {
             result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -101,17 +100,16 @@ class SecureTeamUserSystem {
 
     createNewTeam(teamData) {
         const teamCode = this.generateTeamCode();
-        const ownerId = 'owner_' + Date.now();
         
         const newTeam = {
             code: teamCode,
             name: teamData.teamName,
             company: teamData.company,
             created: new Date().toISOString(),
-            createdBy: ownerId,
-            subscription: 'basic',
+            createdBy: 'owner_' + Date.now(),
+            subscription: 'owner',
             users: [{
-                id: ownerId,
+                id: 'owner_' + Date.now(),
                 name: teamData.ownerName,
                 email: teamData.ownerEmail,
                 role: 'owner',
@@ -205,12 +203,12 @@ class SecureTeamUserSystem {
         this.saveTeams();
         
         // Create session
-const session = {
-    userId: user.id,
-    teamCode: teamCode,
-    loginTime: new Date().toISOString(),
-    expires: Date.now() + (30 * 24 * 60 * 60 * 1000) // 30 days
-};
+        const session = {
+            userId: user.id,
+            teamCode: teamCode,
+            loginTime: new Date().toISOString(),
+            expires: Date.now() + (30 * 24 * 60 * 60 * 1000) // 30 days
+        };
         localStorage.setItem('recruitpro_current_session', JSON.stringify(session));
         
         console.log(`✅ Login successful: ${user.name} (${team.name})`);
@@ -262,7 +260,7 @@ const session = {
             teamCode: teamCode.toUpperCase(),
             created: new Date().toISOString(),
             lastLogin: null,
-            status: 'active', // Could be 'pending' for approval workflow
+            status: 'active',
             permissions: this.getDefaultPermissions(role || 'recruiter')
         };
         
@@ -276,6 +274,53 @@ const session = {
         setTimeout(() => {
             this.handleLogin(teamCode, email, password);
         }, 1500);
+    }
+
+    async handleCreateTeam() {
+        this.clearMessages();
+        
+        const teamData = {
+            teamName: document.getElementById('createTeamName').value,
+            company: document.getElementById('createCompany').value,
+            ownerName: document.getElementById('createOwnerName').value,
+            ownerEmail: document.getElementById('createOwnerEmail').value,
+            password: document.getElementById('createPassword').value,
+            confirmPassword: document.getElementById('createConfirmPassword').value
+        };
+
+        // Validation
+        if (!teamData.teamName || !teamData.company || !teamData.ownerName || !teamData.ownerEmail || !teamData.password) {
+            this.showMessage('Please fill in all required fields', 'error');
+            return;
+        }
+
+        if (teamData.password !== teamData.confirmPassword) {
+            this.showMessage('Passwords do not match', 'error');
+            return;
+        }
+
+        if (teamData.password.length < 4) {
+            this.showMessage('Password must be at least 4 characters long', 'error');
+            return;
+        }
+
+        // Check if email exists in any team
+        for (const teamCode in this.teams) {
+            if (this.teams[teamCode].users.find(u => u.email.toLowerCase() === teamData.ownerEmail.toLowerCase())) {
+                this.showMessage('An account with this email already exists.', 'error');
+                return;
+            }
+        }
+
+        // Create the team
+        const result = this.createNewTeam(teamData);
+        
+        this.showMessage(`Team created successfully! Your team code is: ${result.team.code}`, 'success');
+        
+        // Auto-login the owner
+        setTimeout(() => {
+            this.handleLogin(result.team.code, teamData.ownerEmail, teamData.password);
+        }, 2000);
     }
 
     // ==========================================
@@ -325,207 +370,214 @@ const session = {
                     <div class="auth-tabs" style="
                         display: flex; background: #f1f5f9; border-radius: 12px; padding: 4px; margin-bottom: 24px;
                     ">
-                        <div class="auth-tab active" data-tab="login" style="
-                            flex: 1; text-align: center; padding: 12px; border-radius: 8px;
-                            cursor: pointer; font-weight: 600; transition: all 0.2s;
-                            background: white; color: #374151; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        <div class="auth-tab active" data-tab="signin" style="
+                            flex: 1; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer;
+                            font-weight: 600; font-size: 14px; background: white; color: #667eea;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;
                         ">Sign In</div>
-                        <div class="auth-tab" data-tab="register" style="
-                            flex: 1; text-align: center; padding: 12px; border-radius: 8px;
-                            cursor: pointer; font-weight: 600; transition: all 0.2s;
-                            color: #64748b;
+                        <div class="auth-tab" data-tab="join" style="
+                            flex: 1; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer;
+                            font-weight: 600; font-size: 14px; color: #64748b; transition: all 0.2s;
                         ">Join Team</div>
                         <div class="auth-tab" data-tab="create" style="
-                            flex: 1; text-align: center; padding: 12px; border-radius: 8px;
-                            cursor: pointer; font-weight: 600; transition: all 0.2s;
-                            color: #64748b;
+                            flex: 1; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer;
+                            font-weight: 600; font-size: 14px; color: #64748b; transition: all 0.2s;
                         ">Create Team</div>
                     </div>
                     
-                    <div id="authMessages" style="margin-bottom: 16px;"></div>
+                    <div id="authMessages"></div>
                     
-                    <!-- Login Form -->
-                    <form class="auth-form active" id="loginForm" style="display: block;">
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
-                                Team Code *
+                    <!-- Sign In Form -->
+                    <div class="auth-form active" id="signinForm" style="display: block;">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
+                                Team Code
                             </label>
-                            <input type="text" id="loginTeamCode" placeholder="e.g., ABC12345" 
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; text-transform: uppercase;"
-                                maxlength="8" required>
+                            <input type="text" id="signinTeamCode" placeholder="Enter your team code" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
-                                Email Address *
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
+                                Email
                             </label>
-                            <input type="email" id="loginEmail" placeholder="your.email@company.com"
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-                                required>
+                            <input type="email" id="signinEmail" placeholder="Enter your email" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
                         <div style="margin-bottom: 24px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
-                                Password *
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
+                                Password
                             </label>
-                            <input type="password" id="loginPassword" placeholder="Enter your password"
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-                                required>
+                            <input type="password" id="signinPassword" placeholder="Enter your password" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
-                        <button type="submit" style="
-                            width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                            color: white; border: none; padding: 14px; border-radius: 8px;
-                            cursor: pointer; font-size: 16px; font-weight: 600; transition: transform 0.2s;
-                        ">
-                            🔐 Sign In
-                        </button>
-                    </form>
+                        <button id="signinButton" style="
+                            width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600;
+                            cursor: pointer; transition: transform 0.2s;
+                        ">Sign In</button>
+                    </div>
                     
-                    <!-- Registration Form -->
-                    <form class="auth-form" id="registerForm" style="display: none;">
+                    <!-- Join Team Form -->
+                    <div class="auth-form" id="joinForm" style="display: none;">
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
                                 Team Code *
                             </label>
-                            <input type="text" id="regTeamCode" placeholder="Get this from your team admin"
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; text-transform: uppercase;"
-                                maxlength="8" required>
+                            <input type="text" id="joinTeamCode" placeholder="Enter team code" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
                                 Full Name *
                             </label>
-                            <input type="text" id="regName" placeholder="John Smith"
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-                                required>
+                            <input type="text" id="joinName" placeholder="Enter your full name" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
-                                Email Address *
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
+                                Email *
                             </label>
-                            <input type="email" id="regEmail" placeholder="john@company.com"
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-                                required>
+                            <input type="email" id="joinEmail" placeholder="Enter your email" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
                                 Role
                             </label>
-                            <select id="regRole" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
-                                <option value="recruiter">🎯 Recruiter</option>
-                                <option value="manager">👔 Hiring Manager</option>
-                                <option value="admin">👑 HR Admin</option>
-                                <option value="viewer">👁️ Team Member</option>
+                            <select id="joinRole" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
+                                <option value="recruiter">Recruiter</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                                <option value="viewer">Viewer</option>
                             </select>
                         </div>
                         
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
                                 Department
                             </label>
-                            <input type="text" id="regDepartment" placeholder="HR, Engineering, Sales..."
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                            <input type="text" id="joinDepartment" placeholder="e.g., HR, Engineering" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
-                                Create Password *
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
+                                Password *
                             </label>
-                            <input type="password" id="regPassword" placeholder="Create a secure password"
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-                                required>
+                            <input type="password" id="joinPassword" placeholder="Create a password" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
+                        <div style="margin-bottom: 24px;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
                                 Confirm Password *
                             </label>
-                            <input type="password" id="regConfirmPassword" placeholder="Confirm your password"
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-                                required>
+                            <input type="password" id="joinConfirmPassword" placeholder="Confirm your password" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
-                        <button type="submit" style="
-                            width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                            color: white; border: none; padding: 14px; border-radius: 8px;
-                            cursor: pointer; font-size: 16px; font-weight: 600; transition: transform 0.2s;
-                        ">
-                            🎯 Join Team
-                        </button>
-                    </form>
+                        <button id="joinButton" style="
+                            width: 100%; padding: 14px; background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+                            color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600;
+                            cursor: pointer; transition: transform 0.2s;
+                        ">Join Team</button>
+                    </div>
                     
                     <!-- Create Team Form -->
-                    <form class="auth-form" id="createForm" style="display: none;">
+                    <div class="auth-form" id="createForm" style="display: none;">
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
-                                Team/Company Name *
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
+                                Team Name *
                             </label>
-                            <input type="text" id="createTeamName" placeholder="Acme Corp HR Team"
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-                                required>
+                            <input type="text" id="createTeamName" placeholder="e.g., Acme HR Team" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
-                                Company Name *
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
+                                Company *
                             </label>
-                            <input type="text" id="createCompany" placeholder="Acme Corporation"
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-                                required>
+                            <input type="text" id="createCompany" placeholder="e.g., Acme Corporation" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
                                 Your Name *
                             </label>
-                            <input type="text" id="createOwnerName" placeholder="Jane Smith"
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-                                required>
+                            <input type="text" id="createOwnerName" placeholder="Enter your full name" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
                                 Your Email *
                             </label>
-                            <input type="email" id="createOwnerEmail" placeholder="jane@acme.com"
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-                                required>
+                            <input type="email" id="createOwnerEmail" placeholder="Enter your email" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
-                                Create Password *
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
+                                Password *
                             </label>
-                            <input type="password" id="createPassword" placeholder="Create a secure password"
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-                                required>
+                            <input type="password" id="createPassword" placeholder="Create a password" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
+                        <div style="margin-bottom: 24px;">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px;">
                                 Confirm Password *
                             </label>
-                            <input type="password" id="createConfirmPassword" placeholder="Confirm your password"
-                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-                                required>
+                            <input type="password" id="createConfirmPassword" placeholder="Confirm your password" style="
+                                width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;
+                            ">
                         </div>
                         
-                        <button type="submit" style="
-                            width: 100%; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-                            color: white; border: none; padding: 14px; border-radius: 8px;
-                            cursor: pointer; font-size: 16px; font-weight: 600; transition: transform 0.2s;
-                        ">
-                            🏢 Create Team
-                        </button>
-                        
-                        <div style="margin-top: 16px; padding: 12px; background: #f0f9ff; border-radius: 6px; font-size: 12px; color: #1e40af;">
-                            A unique team code will be generated for your team members to join.
-                        </div>
-                    </form>
+                        <button id="createButton" style="
+                            width: 100%; padding: 14px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                            color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600;
+                            cursor: pointer; transition: transform 0.2s;
+                        ">Create Team</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -535,7 +587,6 @@ const session = {
         // Tab switching
         document.querySelectorAll('.auth-tab').forEach(tab => {
             tab.addEventListener('click', () => {
-                // Update tabs
                 document.querySelectorAll('.auth-tab').forEach(t => {
                     t.classList.remove('active');
                     t.style.background = 'transparent';
@@ -545,93 +596,60 @@ const session = {
                 
                 tab.classList.add('active');
                 tab.style.background = 'white';
-                tab.style.color = '#374151';
+                tab.style.color = '#667eea';
                 tab.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
                 
-                // Update forms
-                document.querySelectorAll('.auth-form').forEach(form => {
-                    form.style.display = 'none';
-                });
-                document.getElementById(tab.dataset.tab + 'Form').style.display = 'block';
+                document.querySelectorAll('.auth-form').forEach(f => f.style.display = 'none');
                 
-                this.clearMessages();
+                const tabName = tab.dataset.tab;
+                if (tabName === 'signin') {
+                    document.getElementById('signinForm').style.display = 'block';
+                } else if (tabName === 'join') {
+                    document.getElementById('joinForm').style.display = 'block';
+                } else if (tabName === 'create') {
+                    document.getElementById('createForm').style.display = 'block';
+                }
             });
         });
 
         // Form submissions
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        document.getElementById('signinButton').addEventListener('click', (e) => {
             e.preventDefault();
-            const teamCode = document.getElementById('loginTeamCode').value;
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            this.handleLogin(teamCode, email, password);
+            this.handleLogin(
+                document.getElementById('signinTeamCode').value,
+                document.getElementById('signinEmail').value,
+                document.getElementById('signinPassword').value
+            );
         });
 
-        document.getElementById('registerForm').addEventListener('submit', (e) => {
+        document.getElementById('joinButton').addEventListener('click', (e) => {
             e.preventDefault();
-            const formData = {
-                teamCode: document.getElementById('regTeamCode').value,
-                name: document.getElementById('regName').value,
-                email: document.getElementById('regEmail').value,
-                role: document.getElementById('regRole').value,
-                department: document.getElementById('regDepartment').value,
-                password: document.getElementById('regPassword').value,
-                confirmPassword: document.getElementById('regConfirmPassword').value
-            };
-            this.handleRegistration(formData);
+            this.handleRegistration({
+                teamCode: document.getElementById('joinTeamCode').value,
+                name: document.getElementById('joinName').value,
+                email: document.getElementById('joinEmail').value,
+                role: document.getElementById('joinRole').value,
+                department: document.getElementById('joinDepartment').value,
+                password: document.getElementById('joinPassword').value,
+                confirmPassword: document.getElementById('joinConfirmPassword').value
+            });
         });
 
-        document.getElementById('createForm').addEventListener('submit', (e) => {
+        document.getElementById('createButton').addEventListener('click', (e) => {
             e.preventDefault();
             this.handleCreateTeam();
         });
-    }
 
-    async handleCreateTeam() {
-        this.clearMessages();
-
-        const teamData = {
-            teamName: document.getElementById('createTeamName').value,
-            company: document.getElementById('createCompany').value,
-            ownerName: document.getElementById('createOwnerName').value,
-            ownerEmail: document.getElementById('createOwnerEmail').value,
-            password: document.getElementById('createPassword').value,
-            confirmPassword: document.getElementById('createConfirmPassword').value
-        };
-
-        // Validation
-        if (!teamData.teamName || !teamData.company || !teamData.ownerName || !teamData.ownerEmail || !teamData.password) {
-            this.showMessage('Please fill in all required fields', 'error');
-            return;
-        }
-
-        if (teamData.password !== teamData.confirmPassword) {
-            this.showMessage('Passwords do not match', 'error');
-            return;
-        }
-
-        if (teamData.password.length < 4) {
-            this.showMessage('Password must be at least 4 characters long', 'error');
-            return;
-        }
-
-        // Check if email exists in any team
-        for (const teamCode in this.teams) {
-            if (this.teams[teamCode].users.find(u => u.email.toLowerCase() === teamData.ownerEmail.toLowerCase())) {
-                this.showMessage('An account with this email already exists.', 'error');
-                return;
+        // Enter key support
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const activeForm = document.querySelector('.auth-form[style*="display: block"]');
+                if (activeForm) {
+                    const button = activeForm.querySelector('button');
+                    if (button) button.click();
+                }
             }
-        }
-
-        // Create the team
-        const result = this.createNewTeam(teamData);
-        
-        this.showMessage(`Team created successfully! Your team code is: ${result.team.code}`, 'success');
-        
-        // Auto-login the owner
-        setTimeout(() => {
-            this.handleLogin(result.team.code, teamData.ownerEmail, teamData.password);
-        }, 2000);
+        });
     }
 
     // ==========================================
@@ -716,6 +734,41 @@ const session = {
     }
 
     // ==========================================
+    // ✅ USER ATTRIBUTION FUNCTIONS (ADDED)
+    // ==========================================
+
+    addUserAttribution(record) {
+        if (!this.currentUser) {
+            console.warn('⚠️ No current user for attribution');
+            return record;
+        }
+        
+        return {
+            ...record,
+            createdBy: this.currentUser.id,
+            createdByName: this.currentUser.name,
+            createdByRole: this.currentUser.role,
+            lastModifiedBy: this.currentUser.id,
+            lastModifiedByName: this.currentUser.name,
+            lastModifiedAt: new Date().toISOString()
+        };
+    }
+
+    updateUserAttribution(record) {
+        if (!this.currentUser) {
+            console.warn('⚠️ No current user for attribution');
+            return record;
+        }
+        
+        return {
+            ...record,
+            lastModifiedBy: this.currentUser.id,
+            lastModifiedByName: this.currentUser.name,
+            lastModifiedAt: new Date().toISOString()
+        };
+    }
+
+    // ==========================================
     // PUBLIC API
     // ==========================================
 
@@ -747,32 +800,20 @@ const session = {
 // Initialize the system
 window.secureTeamAuth = new SecureTeamUserSystem();
 
-// Global helpers for integration
+// ✅ UPDATED GLOBAL HELPERS - These are the functions your app expects
+window.getCurrentUser = () => window.secureTeamAuth?.getCurrentUser();
 window.getCurrentTeamUser = () => window.secureTeamAuth?.getCurrentUser();
 window.getCurrentTeam = () => window.secureTeamAuth?.getCurrentTeam();
 window.getTeamMembers = () => window.secureTeamAuth?.getTeamMembers();
 
-/*
-==============================================
-IMPLEMENTATION INSTRUCTIONS:
-==============================================
+// ✅ THE MISSING FUNCTIONS THAT WERE CAUSING THE ERROR
+window.addUserAttribution = (record) => window.secureTeamAuth?.addUserAttribution(record);
+window.updateUserAttribution = (record) => window.secureTeamAuth?.updateUserAttribution(record);
 
-1. Replace your existing authentication system with this secure team-based version
-2. Features:
-   ✅ Unique team codes (8-character alphanumeric)
-   ✅ Company-isolated user lists
-   ✅ Three registration modes: Sign In, Join Team, Create Team
-   ✅ Secure team management
-   ✅ Ready for subscription model
+// Legacy compatibility
+window.isUserLoggedIn = () => !!window.secureTeamAuth?.getCurrentUser();
+window.logout = () => window.secureTeamAuth?.logout();
 
-3. How it works:
-   - Each company/team gets a unique code (e.g., "ABC12345")
-   - Users can only see members of their own team
-   - Team codes are shared by admins to invite new members
-   - Complete privacy between different companies
-
-4. Future subscription model ready:
-   - Teams have subscription levels (owner, premium, basic)
-   - Can limit features based on subscription
-   - Easy to migrate to server-based system
-*/
+console.log('🔐 Secure Team Authentication System loaded!');
+console.log('✅ Features: Team codes, User attribution, Role-based access');
+console.log('✅ Functions available: addUserAttribution, updateUserAttribution');

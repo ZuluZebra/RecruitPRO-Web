@@ -1,0 +1,116 @@
+name: Build Protected Version
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install tools
+      run: npm install uglify-js clean-css html-minifier
+        
+    - name: Build protected version
+      run: |
+        mkdir -p dist
+        
+        # Combine JS files
+        cat public/js/secure-team-auth.js \
+            public/js/services/api.js \
+            public/js/folder-collaboration-system.js \
+            public/js/components/*.js \
+            public/js/app.js > combined.js
+            
+        # Minify with obfuscation
+        npx uglifyjs combined.js \
+          --mangle \
+          --compress drop_console=true \
+          --output dist/app.min.js
+          
+        # Minify CSS
+        cat public/css/*.css > combined.css
+        npx cleancss combined.css -o dist/styles.min.css
+        
+        # Create protected HTML
+        echo '<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>RecruitPro</title>
+            <link rel="stylesheet" href="styles.min.css">
+            <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+            <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+            <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+        </head>
+        <body>
+            <div id="root"></div>
+            <script src="app.min.js"></script>
+            <script>
+                document.addEventListener("contextmenu",e=>e.preventDefault());
+                document.addEventListener("keydown",e=>{
+                    (e.key==="F12"||e.ctrlKey&&e.shiftKey&&e.key==="I")&&(e.preventDefault(),alert("Dev tools disabled"))
+                });
+            </script>
+        </body>
+        </html>' > dist/index.html
+        
+    - name: Deploy to protected branch
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git checkout -b protected || git checkout protected
+        rm -rf *
+        cp -r dist/* .
+        git add .
+        git commit -m "Protected build" || echo "No changes"
+        git push origin protected --force
+```
+
+### **🎯 STEP 2: Configure Vercel for Protected Branch**
+
+1. **Go to your Vercel dashboard**
+2. **Find your RecruitPro project**
+3. **Click Settings > Git**
+4. **Change "Production Branch" from `main` to `protected`**
+
+### **🎯 STEP 3: Trigger the Protection**
+
+1. **Go back to your GitHub repo**
+2. **Make any small change** (add a space somewhere)
+3. **Commit and push to main branch**
+4. **GitHub Action will automatically:**
+   - Minify your code
+   - Create protected version
+   - Push to `protected` branch
+   - Vercel deploys the protected version
+
+### **🎯 STEP 4: Verify Protection**
+
+1. **Check your Vercel URL** (your live site)
+2. **Press F12** - should be blocked
+3. **Right-click** - should be disabled
+4. **View source** - code should look like: `var a=function(b){c(b)}`
+
+### **🔄 How It Works:**
+```
+Your Code (main branch) 
+    ↓ 
+GitHub Action runs 
+    ↓ 
+Creates minified/protected version 
+    ↓ 
+Pushes to "protected" branch 
+    ↓ 
+Vercel deploys protected branch 
+    ↓ 
+Your live site is protected!

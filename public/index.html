@@ -301,88 +301,49 @@
         });
     </script>
     <script>
-// 🔒 FIXED PROTECTION - Allows Normal Typing
+// 🔒 MINIMAL PROTECTION - Allows Normal Typing
 (function() {
     'use strict';
     
-    let warningShown = false;
-    
-    // Disable right-click completely
+    // Disable right-click only
     document.addEventListener('contextmenu', function(e) {
         e.preventDefault();
-        e.stopPropagation();
-        showWarning();
+        alert('🔒 Right-click disabled for security.');
         return false;
     });
     
-    // Disable ONLY dev tool shortcuts (not all keyboard input)
+    // Block ONLY dev tool shortcuts
     document.addEventListener('keydown', function(e) {
-        // Only block specific dev tool combinations
-        let shouldBlock = false;
-        
-        if (e.key === 'F12') shouldBlock = true;
-        if (e.ctrlKey && e.shiftKey && e.key === 'I') shouldBlock = true;
-        if (e.ctrlKey && e.shiftKey && e.key === 'C') shouldBlock = true;
-        if (e.ctrlKey && e.shiftKey && e.key === 'J') shouldBlock = true;
-        if (e.ctrlKey && e.key === 'u') shouldBlock = true;
-        
-        // Allow normal typing, arrows, backspace, etc.
-        if (shouldBlock) {
+        // Block F12
+        if (e.key === 'F12') {
             e.preventDefault();
-            e.stopPropagation();
-            showWarning();
+            alert('🔒 Developer tools disabled.');
             return false;
         }
         
-        // Allow all other keys (typing, etc.)
+        // Block Ctrl+Shift+I (inspect)
+        if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+            e.preventDefault();
+            alert('🔒 Developer tools disabled.');
+            return false;
+        }
+        
+        // Block Ctrl+U (view source)
+        if (e.ctrlKey && e.key === 'u') {
+            e.preventDefault();
+            alert('🔒 View source disabled.');
+            return false;
+        }
+        
+        // Allow ALL other keys (typing, etc.)
         return true;
     });
     
-    // Dev tools detection (less aggressive)
-    let devtools = {open: false};
-    const threshold = 160;
-    
-    function detectDevTools() {
-        if (window.outerHeight - window.innerHeight > threshold || 
-            window.outerWidth - window.innerWidth > threshold) {
-            if (!devtools.open) {
-                devtools.open = true;
-                showDevToolsWarning();
-            }
-        } else {
-            devtools.open = false;
-        }
-    }
-    
-    setInterval(detectDevTools, 1000); // Less frequent checking
-    
-    // Allow text selection in input fields
-    document.addEventListener('selectstart', function(e) {
-        // Allow selection in input/textarea elements
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-            return true;
-        }
-        // Block selection elsewhere
-        e.preventDefault();
-        return false;
-    });
-    
-    function showWarning() {
-        if (!warningShown) {
-            warningShown = true;
-            alert('🔒 Right-click is disabled for security reasons.');
-            setTimeout(() => { warningShown = false; }, 2000);
-        }
-    }
-    
-    function showDevToolsWarning() {
-        alert('🚨 Developer tools detected! Please close them to continue.');
-    }
-    
-    // Clean console (less aggressive)
+    // Simple dev tools detection
     setInterval(function() {
-        console.clear();
-        console.log('%c🔒 PROTECTED APPLICATION', 'color: red; font-size: 16px; font-weight: bold;');
+        if (window.outerHeight - window.innerHeight > 200) {
+            alert('🚨 Please close developer tools to continue.');
+        }
     }, 3000);
     
 })();

@@ -455,15 +455,17 @@ if (!currentUser) {
             setActiveTab={setActiveTab}
             isOnline={isOnline}
         >
-            {/* Render active tab content */}
             {activeTab === 'candidates' && (
     <CandidatesComponent
         currentUser={currentUser}
-        candidates={candidates}
+        candidates={window.candidatePrivacySystem ? 
+            window.candidatePrivacySystem.filterCandidatesByPrivacy(candidates, currentUser) : 
+            candidates
+        }
         setCandidates={setCandidates}
         projects={projects}
         onScheduleInterview={handleScheduleInterview}
-        onKeepWarm={handleKeepWarm}  // ADD THIS LINE
+        onKeepWarm={handleKeepWarm}
     />
 )}
 

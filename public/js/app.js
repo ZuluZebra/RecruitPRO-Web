@@ -43,21 +43,34 @@ if (!currentUser) {
     }, []);
 
     // Listen for the secure auth system - MOVED INSIDE REACT COMPONENT
-    React.useEffect(() => {
-        const handleUserAuthenticated = (event) => {
-            const { user, team } = event.detail;
-            console.log(`🔐 Authenticated: ${user.name} from ${team.name}`);
-            console.log('🔐 Setting currentUser in React state...');
-            setCurrentUser(user);
-        };
+React.useEffect(() => {
+    console.log('🔧 Setting up authentication listener...');
+    
+    const handleUserAuthenticated = (event) => {
+        console.log('🎯 userAuthenticated event received:', event.detail);
+        const { user, team } = event.detail;
+        console.log(`🔐 Authenticated: ${user.name} from ${team.name}`);
+        console.log('🔐 Setting currentUser in React state...');
+        setCurrentUser(user);
+    };
 
-        document.addEventListener('userAuthenticated', handleUserAuthenticated);
-        
-        // Cleanup
-        return () => {
-            document.removeEventListener('userAuthenticated', handleUserAuthenticated);
-        };
-    }, []);
+    document.addEventListener('userAuthenticated', handleUserAuthenticated);
+    
+    // Also check for immediate authentication on mount
+    setTimeout(() => {
+        if (window.secureTeamAuth && window.secureTeamAuth.getCurrentUser()) {
+            const user = window.secureTeamAuth.getCurrentUser();
+            const team = window.secureTeamAuth.getCurrentTeam();
+            console.log('🔍 Found existing authenticated user:', user.name);
+            setCurrentUser(user);
+        }
+    }, 100);
+    
+    // Cleanup
+    return () => {
+        document.removeEventListener('userAuthenticated', handleUserAuthenticated);
+    };
+}, []);
 
     // FIXED: Enhanced debug effect to track candidates state changes and interview feedback
     React.useEffect(() => {
@@ -298,18 +311,8 @@ const loadCompanies = async () => {
 };
 // ⬆️ END OF NEW FUNCTION
 
-    // Handle user login - SIMPLIFIED FOR SECURETEAMAUTH
-    const handleLogin = (user) => {
-        console.log('Login successful for:', user.name);
-        setCurrentUser(user);
-    };
+    
 
-// Listen for the new secure auth system
-document.addEventListener('userAuthenticated', (event) => {
-    const { user, team } = event.detail;
-    console.log(`🔐 Authenticated: ${user.name} from ${team.name}`);
-    handleLogin(user);
-});
 
     // Handle user logout
     const handleLogout = () => {

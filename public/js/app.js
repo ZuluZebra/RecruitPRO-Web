@@ -253,10 +253,24 @@ const loadCompanies = async () => {
 // ⬆️ END OF NEW FUNCTION
 
     // Handle user login
-    const handleLogin = (user) => {
-        console.log('Login successful');
-        setCurrentUser(user);
-    };
+const handleLogin = (user) => {
+    console.log('Login successful');
+    setCurrentUser(user);
+    
+    // Check for folder reconnection after successful login
+    setTimeout(() => {
+        if (window.folderCollaboration) {
+            window.folderCollaboration.checkForReconnection();
+        }
+    }, 2000); // Wait 2 seconds after login
+};
+
+// Listen for the new secure auth system
+document.addEventListener('userAuthenticated', (event) => {
+    const { user, team } = event.detail;
+    console.log(`🔐 Authenticated: ${user.name} from ${team.name}`);
+    handleLogin(user);
+});
 
     // Handle user logout
     const handleLogout = () => {
@@ -287,18 +301,19 @@ const loadCompanies = async () => {
 const handleKeepWarm = (candidateId) => {
     const candidate = candidates.find(c => c.id === candidateId);
     if (candidate) {
-        // Add timestamp when moved to warm
-        const warmCandidate = {
-            ...candidate,
-            movedToWarmDate: new Date().toISOString(),
-            lastContact: new Date().toISOString(),
-            warmStatus: 'fresh'
-        };
-        
-        // Move to warm pipeline
-        const updatedWarmCandidates = [warmCandidate, ...warmCandidates];
-        setWarmCandidates(updatedWarmCandidates);
-        helpers.storage.save('recruitpro_warm_candidates', updatedWarmCandidates); // ADD THIS LINE
+        // Add timestamp when moved to warm with attribution
+const baseWarmCandidate = {
+    ...candidate,
+    movedToWarmDate: new Date().toISOString(),
+    lastContact: new Date().toISOString(),
+    warmStatus: 'fresh'
+};
+const warmCandidate = window.updateUserAttribution(baseWarmCandidate);
+
+// Move to warm pipeline
+const updatedWarmCandidates = [warmCandidate, ...warmCandidates];
+setWarmCandidates(updatedWarmCandidates);
+helpers.storage.save('recruitpro_warm_candidates', updatedWarmCandidates);
         
         // Remove from active candidates
         const updatedActiveCandidates = candidates.filter(c => c.id !== candidateId);
@@ -380,11 +395,11 @@ const handleKeepWarm = (candidateId) => {
         }
     };
 
-    // Render login screen if no user
-    if (!currentUser) {
-        console.log('Rendering login screen');
-        return <LoginComponent onLogin={handleLogin} />;
-    }
+    // The secure team auth system handles login automatically
+if (!currentUser) {
+    console.log('Waiting for secure authentication...');
+    return null; // Secure auth system will show login interface
+}
 
     // Render loading screen
     if (loading) {

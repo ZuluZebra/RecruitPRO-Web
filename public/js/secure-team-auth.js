@@ -205,20 +205,13 @@ class SecureTeamUserSystem {
         this.saveTeams();
         
         // Create session
-// Create session with dynamic duration based on "Remember Me"
-const rememberMe = document.getElementById('rememberMe')?.checked;
-const duration = rememberMe ? (30 * 24 * 60 * 60 * 1000) : (8 * 60 * 60 * 1000); // 30 days or 8 hours
-
 const session = {
     userId: user.id,
     teamCode: teamCode,
     loginTime: new Date().toISOString(),
-    expires: Date.now() + duration,
-    rememberMe: rememberMe
+    expires: Date.now() + (30 * 24 * 60 * 60 * 1000) // 30 days
 };
-localStorage.setItem('recruitpro_current_session', JSON.stringify(session));
-
-console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
+        localStorage.setItem('recruitpro_current_session', JSON.stringify(session));
         
         console.log(`✅ Login successful: ${user.name} (${team.name})`);
         this.onLoginSuccess(user);
@@ -302,10 +295,8 @@ console.log(`✅ Session created for ${rememberMe ? '30 days' : '8 hours'}`);
         document.querySelectorAll('#secureAuthContainer, .login-container').forEach(el => el.remove());
         
         document.body.appendChild(authContainer);
-        // Fixed code - add delay to ensure DOM is ready
-setTimeout(() => {
-    this.setupAuthEventListeners();
-}, 50);
+        this.setupAuthEventListeners();
+    }
 
     getAuthHTML() {
         return `
@@ -374,32 +365,21 @@ setTimeout(() => {
                         </div>
                         
                         <div style="margin-bottom: 24px;">
-    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
-        Password *
-    </label>
-    <input type="password" id="loginPassword" placeholder="Enter your password"
-        style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
-        required>
-</div>
-
-<!-- ADD THIS REMEMBER ME SECTION -->
-<div style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-    <input type="checkbox" id="rememberMe" checked style="
-        margin: 0; width: 16px; height: 16px; cursor: pointer;
-        accent-color: #667eea;
-    ">
-    <label for="rememberMe" style="
-        font-size: 14px; color: #374151; cursor: pointer; 
-        user-select: none; display: flex; align-items: center; gap: 4px;
-    ">
-        <span>Remember me for 30 days</span>
-        <span style="font-size: 12px; color: #6b7280;">(recommended)</span>
-    </label>
-</div>
-
-<button type="submit" style="width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; transition: transform 0.2s;">
-    🔐 Sign In
-</button>
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">
+                                Password *
+                            </label>
+                            <input type="password" id="loginPassword" placeholder="Enter your password"
+                                style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
+                                required>
+                        </div>
+                        
+                        <button type="submit" style="
+                            width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white; border: none; padding: 14px; border-radius: 8px;
+                            cursor: pointer; font-size: 16px; font-weight: 600; transition: transform 0.2s;
+                        ">
+                            🔐 Sign In
+                        </button>
                     </form>
                     
                     <!-- Registration Form -->
@@ -552,59 +532,42 @@ setTimeout(() => {
     }
 
     setupAuthEventListeners() {
-    console.log('🔧 Setting up auth event listeners...');
-    
-    // Tab switching
-    document.querySelectorAll('.auth-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            // Update tabs
-            document.querySelectorAll('.auth-tab').forEach(t => {
-                t.classList.remove('active');
-                t.style.background = 'transparent';
-                t.style.color = '#64748b';
-                t.style.boxShadow = 'none';
+        // Tab switching
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update tabs
+                document.querySelectorAll('.auth-tab').forEach(t => {
+                    t.classList.remove('active');
+                    t.style.background = 'transparent';
+                    t.style.color = '#64748b';
+                    t.style.boxShadow = 'none';
+                });
+                
+                tab.classList.add('active');
+                tab.style.background = 'white';
+                tab.style.color = '#374151';
+                tab.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                
+                // Update forms
+                document.querySelectorAll('.auth-form').forEach(form => {
+                    form.style.display = 'none';
+                });
+                document.getElementById(tab.dataset.tab + 'Form').style.display = 'block';
+                
+                this.clearMessages();
             });
-            
-            tab.classList.add('active');
-            tab.style.background = 'white';
-            tab.style.color = '#374151';
-            tab.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-            
-            // Update forms
-            document.querySelectorAll('.auth-form').forEach(form => {
-                form.style.display = 'none';
-            });
-            document.getElementById(tab.dataset.tab + 'Form').style.display = 'block';
-            
-            this.clearMessages();
         });
-    });
 
-    // Form submissions with better error handling
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        console.log('✅ Login form found');
-        loginForm.addEventListener('submit', (e) => {
-            console.log('🔍 Login form submitted');
+        // Form submissions
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            e.stopPropagation();
-            
             const teamCode = document.getElementById('loginTeamCode').value;
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
-            
-            console.log('📝 Login data:', { teamCode, email, password: '***' });
             this.handleLogin(teamCode, email, password);
-            return false;
         });
-    } else {
-        console.error('❌ Login form NOT found');
-    }
 
-    // Rest of your event listeners (registerForm and createForm)
-    const registerForm = document.getElementById('registerForm');
-    if (registerForm) {
-        registerForm.addEventListener('submit', (e) => {
+        document.getElementById('registerForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = {
                 teamCode: document.getElementById('regTeamCode').value,
@@ -617,16 +580,12 @@ setTimeout(() => {
             };
             this.handleRegistration(formData);
         });
-    }
 
-    const createForm = document.getElementById('createForm');
-    if (createForm) {
-        createForm.addEventListener('submit', (e) => {
+        document.getElementById('createForm').addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleCreateTeam();
         });
     }
-}
 
     async handleCreateTeam() {
         this.clearMessages();

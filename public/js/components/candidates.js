@@ -1994,24 +1994,97 @@ React.useEffect(() => {
     </button>
 
     {/* Dropdown Menu */}
-    {showActionsMenu && (
-    <div 
-        data-actions-dropdown="true"
-        style={{
-            position: 'absolute',
-            top: '100%',
-            right: 0,
-            marginTop: '4px',
-            background: 'var(--card-bg)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '8px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
-            zIndex: 10000,
-            minWidth: '160px',
-            overflow: 'hidden'
+{showActionsMenu && (
+<div 
+    data-actions-dropdown="true"
+    style={{
+        position: 'absolute',
+        top: '100%',
+        right: 0,
+        marginTop: '4px',
+        background: 'var(--card-bg)',
+        border: '1px solid var(--border-color)',
+        borderRadius: '8px',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+        zIndex: 10000,
+        minWidth: '160px',
+        overflow: 'hidden'
+    }}
+        onClick={(e) => e.stopPropagation()}
+    >
+    
+    {/* ADD THE PRIVACY CONTROL RIGHT HERE */}
+    <div
+        onClick={(e) => {
+            e.stopPropagation();
+            if (window.PrivacyControls) {
+                // Create and show privacy modal
+                const privacyModal = React.createElement(window.PrivacyControls, {
+                    candidate: candidate,
+                    currentUser: currentUser,
+                    onPrivacyUpdate: (updatedCandidate) => {
+                        onUpdate(candidate.id, updatedCandidate);
+                    },
+                    compact: false
+                });
+                
+                // Show in a simple modal (temporary solution)
+                const modalContainer = document.createElement('div');
+                modalContainer.style.cssText = `
+                    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+                    align-items: center; z-index: 10000;
+                `;
+                modalContainer.onclick = (e) => {
+                    if (e.target === modalContainer) {
+                        document.body.removeChild(modalContainer);
+                    }
+                };
+                
+                const modalContent = document.createElement('div');
+                modalContent.style.cssText = `
+                    background: white; padding: 24px; border-radius: 12px;
+                    max-width: 400px; width: 90%;
+                `;
+                modalContent.innerHTML = `
+                    <h3 style="margin: 0 0 16px 0;">🔐 Privacy Settings for ${candidate.name}</h3>
+                    <div id="privacy-controls-container"></div>
+                    <button onclick="this.closest('div[style*=fixed]').remove()" 
+                            style="margin-top: 16px; padding: 8px 16px; background: #666; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        Close
+                    </button>
+                `;
+                
+                modalContainer.appendChild(modalContent);
+                document.body.appendChild(modalContainer);
+                
+                // Render privacy controls
+                const ReactDOM = window.ReactDOM;
+                ReactDOM.render(privacyModal, modalContent.querySelector('#privacy-controls-container'));
+            }
+            setShowActionsMenu(false);
         }}
-            onClick={(e) => e.stopPropagation()}
-        >
+        style={{
+            padding: '12px 16px',
+            cursor: 'pointer',
+            transition: 'background 0.2s ease',
+            borderBottom: '1px solid var(--border-color)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: 'var(--text-primary)'
+        }}
+        onMouseEnter={(e) => {
+            e.target.style.background = 'var(--bg-secondary)';
+        }}
+        onMouseLeave={(e) => {
+            e.target.style.background = 'transparent';
+        }}
+    >
+        🔐 Privacy Settings
+    </div>
             {!showArchived && (
                 <button
                     onClick={(e) => {

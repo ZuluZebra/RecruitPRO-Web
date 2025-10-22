@@ -22,6 +22,21 @@ const RecruitProApp = () => {
     const [showInterviewModal, setShowInterviewModal] = React.useState(false);
     const [preSelectedCandidate, setPreSelectedCandidate] = React.useState(null);
 
+    // Add this right after all the useState declarations, before any useEffect
+if (!currentUser) {
+    return React.createElement('div', {
+        style: { 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            height: '100vh',
+            background: '#f8fafc',
+            color: '#374151',
+            fontFamily: 'Inter, sans-serif'
+        }
+    }, 'Waiting for authentication...');
+}
+
     // Initialize theme on mount
     React.useEffect(() => {
         helpers.themeManager.init();

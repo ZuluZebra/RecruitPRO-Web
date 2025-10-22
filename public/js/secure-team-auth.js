@@ -552,6 +552,8 @@ setTimeout(() => {
     }
 
     setupAuthEventListeners() {
+    console.log('🔧 Setting up auth event listeners...');
+    
     // Tab switching
     document.querySelectorAll('.auth-tab').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -578,26 +580,28 @@ setTimeout(() => {
         });
     });
 
-    // Form submissions - ADD ERROR CHECKING
+    // Form submissions with better error handling
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
-        console.log('✅ Login form found, adding event listener');
+        console.log('✅ Login form found');
         loginForm.addEventListener('submit', (e) => {
-            console.log('🔍 Form submit event triggered');
+            console.log('🔍 Login form submitted');
             e.preventDefault();
             e.stopPropagation();
+            
             const teamCode = document.getElementById('loginTeamCode').value;
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
-            console.log('📝 Form data:', { teamCode, email, password: '***' });
+            
+            console.log('📝 Login data:', { teamCode, email, password: '***' });
             this.handleLogin(teamCode, email, password);
             return false;
         });
     } else {
-        console.error('❌ Login form not found!');
+        console.error('❌ Login form NOT found');
     }
 
-    // Rest of your event listeners...
+    // Rest of your event listeners (registerForm and createForm)
     const registerForm = document.getElementById('registerForm');
     if (registerForm) {
         registerForm.addEventListener('submit', (e) => {

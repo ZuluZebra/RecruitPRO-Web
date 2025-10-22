@@ -261,7 +261,6 @@
     <script src="js/folder-collaboration-system.js"></script>
     
   <!-- Components -->
-    <script src="js/secure-team-auth.js"></script>
 <script type="text/babel" src="js/components/login.js"></script>
 <script type="text/babel" src="js/components/dashboard.js"></script>
 <script type="text/babel" src="js/components/candidates.js"></script>
@@ -302,22 +301,5 @@
             }, 1000);
         });
     </script>
-</body>
-    <script>
-// Force authentication check on page load
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🔍 Page loaded, checking authentication...');
-    if (window.secureTeamAuth) {
-        window.secureTeamAuth.checkExistingSession();
-    } else {
-        console.log('🚀 Initializing secure team auth...');
-        setTimeout(() => {
-            if (window.secureTeamAuth) {
-                window.secureTeamAuth.checkExistingSession();
-            }
-        }, 100);
-    }
-});
-</script>
 </body>
 </html>

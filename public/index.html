@@ -301,13 +301,134 @@
         });
     </script>
     <script>
-document.addEventListener('contextmenu', e => e.preventDefault());
-document.addEventListener('keydown', e => {
-  if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u')) {
-    e.preventDefault();
-    alert('🔒 Developer tools disabled');
-  }
-});
+// 🔒 HARDCORE ANTI-THEFT PROTECTION
+(function() {
+    'use strict';
+    
+    // Disable right-click completely
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        showWarning();
+        return false;
+    });
+    
+    // Disable all dev tool shortcuts
+    document.addEventListener('keydown', function(e) {
+        // F12, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+Shift+J, Ctrl+U, Ctrl+S, Ctrl+A, Ctrl+P
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) ||
+            (e.ctrlKey && (e.key === 'u' || e.key === 's' || e.key === 'a' || e.key === 'p')) ||
+            e.key === 'F5' ||
+            (e.ctrlKey && e.key === 'r')) {
+            e.preventDefault();
+            e.stopPropagation();
+            showWarning();
+            return false;
+        }
+    });
+    
+    // Aggressive dev tools detection
+    let devtools = {open: false, orientation: null};
+    const threshold = 160;
+    
+    function detectDevTools() {
+        if (window.outerHeight - window.innerHeight > threshold || 
+            window.outerWidth - window.innerWidth > threshold) {
+            if (!devtools.open) {
+                devtools.open = true;
+                lockScreen();
+            }
+        } else {
+            devtools.open = false;
+        }
+    }
+    
+    // Multiple detection methods
+    setInterval(detectDevTools, 100);
+    
+    // Console detection
+    let consoleCheck = () => {
+        let devtools = false;
+        let threshold = 160;
+        
+        if (window.outerHeight - window.innerHeight > threshold || 
+            window.outerWidth - window.innerWidth > threshold) {
+            devtools = true;
+        }
+        
+        if (devtools) {
+            lockScreen();
+        }
+    };
+    
+    setInterval(consoleCheck, 500);
+    
+    // Disable text selection
+    document.onselectstart = function() { return false; };
+    document.onmousedown = function() { return false; };
+    
+    // Disable drag and drop
+    document.ondragstart = function() { return false; };
+    
+    // Disable printing
+    window.addEventListener('beforeprint', function(e) {
+        e.preventDefault();
+        showWarning();
+        return false;
+    });
+    
+    // Clear console repeatedly
+    setInterval(function() {
+        console.clear();
+        console.log('%c🔒 PROTECTED APPLICATION', 'color: red; font-size: 20px; font-weight: bold;');
+        console.log('%cAccess to developer tools is prohibited.', 'color: red; font-size: 14px;');
+        console.log('%cUnauthorized access is tracked and reported.', 'color: red; font-size: 14px;');
+    }, 1000);
+    
+    function showWarning() {
+        alert('🚨 SECURITY ALERT\n\nUnauthorized access attempt detected!\nThis action has been logged.\n\nDeveloper tools are disabled for security reasons.');
+    }
+    
+    function lockScreen() {
+        document.body.innerHTML = `
+            <div style="
+                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                background: linear-gradient(45deg, #ff0000, #990000);
+                display: flex; flex-direction: column; justify-content: center; align-items: center;
+                color: white; font-family: Arial, sans-serif; z-index: 999999;
+            ">
+                <h1 style="font-size: 48px; margin-bottom: 20px;">🔒 ACCESS DENIED</h1>
+                <h2 style="font-size: 24px; margin-bottom: 20px;">Developer Tools Detected</h2>
+                <p style="font-size: 18px; text-align: center; max-width: 600px;">
+                    This application is protected against unauthorized access.<br><br>
+                    Your attempt to access developer tools has been detected and logged.<br><br>
+                    Please close developer tools and refresh the page.
+                </p>
+                <p style="font-size: 14px; margin-top: 30px; opacity: 0.8;">
+                    Security ID: ${Date.now().toString(36).toUpperCase()}
+                </p>
+            </div>
+        `;
+    }
+    
+    // Debugger trap
+    setInterval(function() {
+        debugger;
+    }, 4000);
+    
+    // Override console methods
+    const noop = function() {};
+    window.console.log = noop;
+    window.console.info = noop;
+    window.console.warn = noop;
+    window.console.error = noop;
+    window.console.debug = noop;
+    
+    // Protection message
+    console.log('%c🛡️ This application is protected', 'color: #ff6b35; font-size: 16px; font-weight: bold;');
+    
+})();
 </script>
 </body>
 </html>

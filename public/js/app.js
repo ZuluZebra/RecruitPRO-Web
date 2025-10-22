@@ -1,6 +1,29 @@
 // Main RecruitPro Application - FIXED INTERVIEW FEEDBACK STATE MANAGEMENT
 const RecruitProApp = () => {
     console.log('RecruitPro starting...');
+
+    // DISABLE CONFLICTING AUTH SYSTEMS - ADD THIS BLOCK
+    React.useEffect(() => {
+        console.log('🔧 Disabling conflicting auth systems...');
+        
+        // Remove any auth interfaces created by other systems
+        const secureAuthContainer = document.getElementById('secureAuthContainer');
+        if (secureAuthContainer) {
+            secureAuthContainer.remove();
+            console.log('🗑️ Removed secure auth container');
+        }
+        
+        // Disable the auth systems
+        if (window.secureTeamAuth) {
+            window.secureTeamAuth.currentUser = null;
+            console.log('🔧 Disabled secureTeamAuth');
+        }
+        
+        if (window.multiUserAuth) {
+            window.multiUserAuth.currentUser = null;
+            console.log('🔧 Disabled multiUserAuth');
+        }
+    }, []);
     
     // Core state
     const [currentUser, setCurrentUser] = React.useState(null);

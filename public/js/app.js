@@ -273,14 +273,26 @@ document.addEventListener('userAuthenticated', (event) => {
 });
 
     // Handle user logout
-    const handleLogout = () => {
-        setCurrentUser(null);
-        setActiveTab('candidates');
-        
-        // Clear any open modals
-        setShowInterviewModal(false);
-        setPreSelectedCandidate(null);
-    };
+const handleLogout = () => {
+    setCurrentUser(null);
+    setActiveTab('candidates');
+    
+    // Clear any open modals
+    setShowInterviewModal(false);
+    setPreSelectedCandidate(null);
+    
+    // Use the proper logout function instead of problematic reload
+    if (window.secureTeamAuth) {
+        window.secureTeamAuth.logout();
+    } else if (window.multiUserAuth) {
+        // Clear session and show auth interface properly
+        localStorage.removeItem('recruitpro_current_session');
+        window.multiUserAuth.showAuthInterface();
+    } else {
+        // Fallback: reload page
+        window.location.reload();
+    }
+};
 
     // Handle scheduling interview from candidate card
     const handleScheduleInterview = (candidate) => {

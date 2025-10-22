@@ -1714,20 +1714,25 @@ React.useEffect(() => {
                     minWidth: 0 // Ensures the container can shrink
                 }}>
                     <div style={{
-                        fontWeight: '700',
-                        fontSize: '16px',
-                        color: showArchived ? 'var(--text-secondary)' : 'var(--text-primary)',
-                        marginBottom: '4px',
-                        lineHeight: '1.3',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                    }}>
-                        {showArchived && '📦'} {candidate.name}
-                    </div>
+    fontWeight: '700',
+    fontSize: '16px',
+    color: showArchived ? 'var(--text-secondary)' : 'var(--text-primary)',
+    marginBottom: '4px',
+    lineHeight: '1.3',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+}}>
+    {window.PrivacyIndicator && React.createElement(window.PrivacyIndicator, {
+        candidate: candidate,
+        size: 'small',
+        showTooltip: true
+    })}
+    {showArchived && '📦'} {candidate.name}
+</div>
                     <div style={{
                         color: 'var(--text-secondary)',
                         fontSize: '13px',
